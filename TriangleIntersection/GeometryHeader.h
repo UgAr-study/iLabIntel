@@ -30,6 +30,9 @@ namespace Geom {
 
         bool isValid() const { return (x != NAN && y != NAN && z != NAN); }
         float Abs() const { return std::sqrt(x * x + y * y + z * z); }
+        Point operator + (Point& p) const;
+        Point operator - (Point& p) const;
+        Point operator / (float a) const;
     };
 
     struct Vector {
@@ -79,11 +82,14 @@ namespace Geom {
 
         Triangle() : A1(), A2(), A3() {}
 
-        explicit Triangle(Point A1_, Point A2_, Point A3_);
+        explicit Triangle(Point A1_, Point A2_, Point A3_) { A1 = A1_;
+                                                             A2 = A2_;
+                                                             A3 = A3_; }
         bool isValid() const;
         bool IsIntersectWithOther(Triangle other) const;
         bool IsIntersectThePlane (Plane plane) const;
         Interval IntersectWithLine (Line line) const;
+        friend std::ostream& operator << (std::ostream &os, Triangle& tr);
     };
 
     struct Plane {
@@ -100,4 +106,11 @@ namespace Geom {
 
     Solution SolveTwoEquations (float a11, float a12, float b1,
                              float a21, float a22, float b2);
+
+    std::ostream& operator << (std::ostream &os, Triangle& tr) {
+        os << "A1 (" << tr.A1.x << ", " << tr.A1.y << ", " << tr.A1.z << ")\n"
+           << "A2 (" << tr.A2.x << ", " << tr.A2.y << ", " << tr.A2.z << ")\n"
+           << "A3 (" << tr.A3.x << ", " << tr.A3.y << ", " << tr.A3.z << ")\n";
+        return os;
+    }
 }

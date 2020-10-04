@@ -1,50 +1,41 @@
 #include "GeometryHeader.h"
 
+
+
+
+//////////////////////
+////////Point/////////
+//////////////////////
+
+
+Geom::Point Geom::Point::operator/(float a) const {
+    Point res;
+    res.x = x / a;
+    res.y = y / a;
+    res.z = z / a;
+    return res;
+}
+
+Geom::Point Geom::Point::operator-(Geom::Point &p) const {
+    Point res;
+    res.x = x - p.x;
+    res.y = y - p.y;
+    res.z = z - p.z;
+    return res;
+}
+
+Geom::Point Geom::Point::operator+(Geom::Point &p) const {
+    Point res;
+    res.x = x + p.x;
+    res.y = y + p.y;
+    res.z = z + p.z;
+    return res;
+}
+
+
 //////////////////////
 ///////Triangle///////
 //////////////////////
-
-Geom::Triangle::Triangle(Point A1_, Point A2_, Point A3_) {
-
-    if (A1_.x <= A2_.x && A1_.x <= A3_.x) {
-        A1 = A1_;
-        if (A2_.x <= A3_.x) {
-            A2 = A2_;
-            A3 = A3_;
-        }
-        else {
-            A2 = A3_;
-            A3 = A2_;
-        }
-        return;
-    }
-
-    if (A2_.x <= A1_.x && A2_.x <= A3_.x) {
-        A1 = A2_;
-        if (A1_.x <= A3_.x) {
-            A2 = A1_;
-            A3 = A3_;
-        }
-        else {
-            A2 = A3_;
-            A3 = A1_;
-        }
-        return;
-    }
-
-    if (A3_.x <= A2_.x && A3_.x <= A1_.x) {
-        A1 = A3_;
-        if (A1_.x <= A2_.x) {
-            A2 = A1_;
-            A3 = A2_;
-        }
-        else {
-            A2 = A2_;
-            A3 = A1_;
-        }
-        return;
-    }
-}
 
 bool Geom::Triangle::IsIntersectWithOther(Triangle other) const {
 
