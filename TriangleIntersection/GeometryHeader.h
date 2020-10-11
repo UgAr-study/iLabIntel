@@ -78,13 +78,25 @@ namespace Geom {
     };
 
     struct Triangle {
+        unsigned number;
+
         Point A1, A2, A3;
 
         Triangle() : A1(), A2(), A3() {}
 
-        explicit Triangle(Point A1_, Point A2_, Point A3_) { A1 = A1_;
-                                                             A2 = A2_;
-                                                             A3 = A3_; }
+        explicit Triangle(unsigned num, Point A1_, Point A2_, Point A3_) : number(num)
+                                                                         { A1 = A1_;
+                                                                           A2 = A2_;
+                                                                           A3 = A3_; }
+
+        explicit Triangle(unsigned num,
+                          float x1, float y1, float z1,
+                          float x2, float y2, float z2,
+                          float x3, float y3, float z3) : Triangle(num,
+                                                                   Point {x1, y1, z1},
+                                                                   Point {x2, y2, z2},
+                                                                   Point {x3, y3, z3}) {}
+
         bool isValid() const;
         bool IsIntersectWithOther(Triangle other) const;
         bool IsIntersectThePlane (Plane plane) const;
@@ -107,10 +119,5 @@ namespace Geom {
     Solution SolveTwoEquations (float a11, float a12, float b1,
                              float a21, float a22, float b2);
 
-    std::ostream& operator << (std::ostream &os, Triangle& tr) {
-        os << "A1 (" << tr.A1.x << ", " << tr.A1.y << ", " << tr.A1.z << ")\n"
-           << "A2 (" << tr.A2.x << ", " << tr.A2.y << ", " << tr.A2.z << ")\n"
-           << "A3 (" << tr.A3.x << ", " << tr.A3.y << ", " << tr.A3.z << ")\n";
-        return os;
-    }
+    std::ostream& operator << (std::ostream &os, Triangle& tr);
 }

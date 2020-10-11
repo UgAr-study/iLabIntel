@@ -26,8 +26,9 @@ void Alg::Cube::CheckThisTriangle(Geom::Triangle *triangle, res_table& ans_table
 }
 
 Alg::Cube::Cube(Geom::Point leftBot, Geom::Point rightTop, triangles_ptr& triangle,
-                special_trs& spec_trs) {
+                special_trs& spec_trs, Cube* parent) {
 
+    parent_cube = parent;
     left_bot = leftBot;
     right_top = rightTop;
     for (auto& i: triangle) {
@@ -37,8 +38,8 @@ Alg::Cube::Cube(Geom::Point leftBot, Geom::Point rightTop, triangles_ptr& triang
                 number_of_elems++;
                 break;
             case 0:
-                if (spec_trs.find(i) != spec_trs.end()) {
-                    spec_trs[i].push_back(this);
+                if (spec_trs.find(i) == spec_trs.end()) {
+                    spec_trs[i] = parent_cube;
                 } else {
                     std::vector<Cube*> cb_vec;
                     cb_vec.push_back(this);
@@ -72,7 +73,8 @@ signed char Alg::Cube::IsTriangleInCube(Geom::Triangle triangle) const {
     return -1;
 }
 
-Alg::Cube* Alg::Cube::CubeFraction (special_trs& spec_trs) {
+Alg::Cube*
+Alg::Cube::CubeFraction (special_trs& spec_trs) {
     Geom::Point begin = left_bot, end = right_top;
     Geom::Point center = (begin + end) / 2;
 
@@ -119,16 +121,22 @@ Alg::Octree::Octree(unsigned MaxDepth, unsigned num_elem_in_cube, triangle_vec& 
     _top = BuildTree(triangles);
 }
 
-Alg::node_t *Alg::Octree::BuildTree(triangle_vec& triangles) {
+Alg::node_t*
+Alg::Octree::BuildTree(triangle_vec& triangles) {
 
     Geom::Point main_cube[2];
     if (!DefineCube(triangles, main_cube)){
         std::cout << "Error, can't define cube" << std::endl;
         exit(EXIT_FAILURE);
     }
+
     triangles_ptr trs;
-    for (auto i: triangles)
+    /*for (auto i: triangles) ????????????????
         trs.push_back(&i);
+    */
+    for (int i = 0; i < triangles.size(); ++i) {
+        trs.push_back(&triangles[i]);
+    }
 
     auto res = new node_t{Cube{main_cube[0], main_cube[1], trs, spec_trs}};
     if (res->cube_.number_of_elems > max_num_of_elems_in_cube) {
@@ -168,20 +176,24 @@ void Alg::Octree::RecursiveDelete(Alg::node_t *top) {
 /////Functions////
 //////////////////
 
-void Alg::FindIntersections (Alg::triangle_vec& triangles) {
+std::vector<unsigned>
+Alg::FindIntersections (Alg::triangle_vec& triangles) {
     Alg::res_table answer_table;
     Alg::Octree octree{MAXDEPTH, NUMINCUBE, triangles};
 
     RecursiveDescent(octree._top, answer_table);
 
-    for (auto& i: octree.spec_trs)
+    for (auto& i: octree.spec_trs) {
         for (auto& j: i.second)
             j->CheckThisTriangle(i.first, answer_table);
-
-    auto iter = answer_table.begin();
-    for (; iter != answer_table.end(); ++iter) {
-        std::cout << iter->second;
     }
+
+    std::vector<unsigned> numbers_of_intersection_trs;
+    auto iter = answer_table.begin();
+    for (; iter != answer_table.end(); ++iter)
+        numbers_of_intersection_trs.push_back(iter->second.number);
+
+    return numbers_of_intersection_trs;
 }
 
 void Alg::RecursiveDescent (Alg::node_t *top, Alg::res_table& ans_table) {
@@ -196,7 +208,7 @@ void Alg::RecursiveDescent (Alg::node_t *top, Alg::res_table& ans_table) {
     }
 }
 
-bool Alg::DefineCube(Alg::triangle_vec& triangles, Geom::Point *dots) {
+bool Alg::DefineCube(const Alg::triangle_vec& triangles, Geom::Point *dots) {
     if (triangles.empty())
         return false;
 
@@ -234,7 +246,3 @@ bool Alg::DefineCube(Alg::triangle_vec& triangles, Geom::Point *dots) {
 
     return true;
 }
-
-
-
-

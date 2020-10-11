@@ -37,6 +37,14 @@ Geom::Point Geom::Point::operator+(Geom::Point &p) const {
 ///////Triangle///////
 //////////////////////
 
+std::ostream& Geom::operator << (std::ostream &os, Triangle& tr) {
+    os << "Triangle № " << tr.number
+       << "\n\tA1 (" << tr.A1.x << ", " << tr.A1.y << ", " << tr.A1.z << ")\n"
+       << "\tA2 (" << tr.A2.x << ", " << tr.A2.y << ", " << tr.A2.z << ")\n"
+       << "\tA3 (" << tr.A3.x << ", " << tr.A3.y << ", " << tr.A3.z << ")\n";
+    return os;
+}
+
 bool Geom::Triangle::IsIntersectWithOther(Triangle other) const {
 
     Plane pl1{A1, A2, A3}, pl2{other.A1, other.A2, other.A3};
@@ -129,7 +137,7 @@ Geom::Interval Geom::Triangle::IntersectWithLine(Line line) const {
 //////////////////////
 
 Geom::Plane::Plane(Point A1, Point A2, Point A3) {
-    Triangle tr(A1, A2, A3);
+    Triangle tr(0, A1, A2, A3);
     if (!tr.isValid())
         return;
     A = Determinant(A3.y - A1.y, A3.z - A1.z,
