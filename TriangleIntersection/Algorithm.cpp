@@ -32,23 +32,12 @@ Alg::Cube::Cube(Geom::Point leftBot, Geom::Point rightTop, triangles_ptr& triang
     left_bot = leftBot;
     right_top = rightTop;
     for (auto& i: triangle) {
-        switch (IsTriangleInCube(*i)) {
-            case 1:
-                triangles.push_back(i);
-                number_of_elems++;
-                break;
-            case 0:
-                if (spec_trs.find(i) == spec_trs.end()) {
-                    spec_trs[i] = parent_cube;
-                } else {
-                    std::vector<Cube*> cb_vec;
-                    cb_vec.push_back(this);
-                    spec_trs[i] = cb_vec;
-                }
-                break;
-            default:
-                break;
-        }
+        signed char isInCube = IsTriangleInCube(*i);
+        if (isInCube == 1) {
+            triangles.push_back(i);
+            number_of_elems++;
+        } else if (isInCube == 0)
+            spec_trs[i] = parent_cube;
     }
 }
 
@@ -98,14 +87,14 @@ Alg::Cube::CubeFraction (special_trs& spec_trs) {
                 end_mid_z = end - p00z;
 
     auto child_cubes = new Cube[8] {
-            Cube {begin, center, triangles, spec_trs},
-            Cube {beg_mid_x, center_mid_right, triangles, spec_trs},
-            Cube {center_mid_bot, end_mid_z, triangles, spec_trs},
-            Cube {beg_mid_y, center_mid_back, triangles, spec_trs},
-            Cube {beg_mid_z, center_mid_top, triangles, spec_trs},
-            Cube {center_mid_front, end_mid_y, triangles, spec_trs},
-            Cube {center, end, triangles, spec_trs},
-            Cube {center_mid_left, end_mid_x, triangles, spec_trs}};
+            Cube {begin, center, triangles, spec_trs, this},
+            Cube {beg_mid_x, center_mid_right, triangles, spec_trs, this},
+            Cube {center_mid_bot, end_mid_z, triangles, spec_trs, this},
+            Cube {beg_mid_y, center_mid_back, triangles, spec_trs, this},
+            Cube {beg_mid_z, center_mid_top, triangles, spec_trs, this},
+            Cube {center_mid_front, end_mid_y, triangles, spec_trs, this},
+            Cube {center, end, triangles, spec_trs, this},
+            Cube {center_mid_left, end_mid_x, triangles, spec_trs, this}};
     return child_cubes;
 }
 
@@ -131,14 +120,12 @@ Alg::Octree::BuildTree(triangle_vec& triangles) {
     }
 
     triangles_ptr trs;
-    /*for (auto i: triangles) ????????????????
-        trs.push_back(&i);
-    */
+
     for (int i = 0; i < triangles.size(); ++i) {
         trs.push_back(&triangles[i]);
     }
 
-    auto res = new node_t{Cube{main_cube[0], main_cube[1], trs, spec_trs}};
+    auto res = new node_t{Cube{main_cube[0], main_cube[1], trs, spec_trs, nullptr}};
     if (res->cube_.number_of_elems > max_num_of_elems_in_cube) {
         RecursiveBuild(res, 0);
     }
@@ -183,10 +170,8 @@ Alg::FindIntersections (Alg::triangle_vec& triangles) {
 
     RecursiveDescent(octree._top, answer_table);
 
-    for (auto& i: octree.spec_trs) {
-        for (auto& j: i.second)
-            j->CheckThisTriangle(i.first, answer_table);
-    }
+    for (auto& i: octree.spec_trs)
+        i.second->CheckThisTriangle(i.first, answer_table);
 
     std::vector<unsigned> numbers_of_intersection_trs;
     auto iter = answer_table.begin();
