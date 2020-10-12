@@ -1,9 +1,9 @@
 #include "../GeometryHeader.h"
 #include "../AlgorithmHeader.h"
-#include <iostream>
-#include <random>
 #include <ctime>
+#include <algorithm>
 
+enum {MAXCOORD = 50, NTRS = 300};
 
 std::vector<int>
 IntGenerator (int n, int min, int max) {
@@ -21,7 +21,7 @@ IntGenerator (int n, int min, int max) {
 std::vector<Geom::Triangle>
 GetRandomTriangles (int tr_num) {
     std::vector<Geom::Triangle> trs;
-    std::vector<int> p = IntGenerator(9 * tr_num, 0, 10);
+    std::vector<int> p = IntGenerator(9 * tr_num, 0, MAXCOORD);
     for (unsigned i = 0; i < tr_num; ++i) {
         unsigned begin = i * 9;
         auto  x1 = static_cast<float>(p[begin]),
@@ -46,7 +46,7 @@ GetAnswer (std::vector<Geom::Triangle> &trs) {
     std::vector<unsigned> res;
     for (auto i: trs)
         for (auto j: trs)
-            //if (j.number != i.number)
+            if (j.number != i.number)
                 if (i.IsIntersectWithOther(j)) {
                     ans_table[i.number] = 1;
                     ans_table[j.number] = 1;
@@ -60,26 +60,44 @@ GetAnswer (std::vector<Geom::Triangle> &trs) {
 }
 
 int main () {
-    Geom::Triangle tr1 {1, 0, 0, 0, 1, 1, 1, 1, 1, 0},
-                   tr2 {2, 0, 0, 0, 1, 0, 0.5, 0, 1, 0.5};
+
+    Geom::Point A11 (6, 6, 3),
+                A12 (10, 10, 2),
+                A13 (7, 10, 6);
+    Geom::Point A21 (9, 5, 8),
+                A22 (5, 10, 3),
+                A23 (7, 0, 8);
+
+
+    Geom::Triangle tr1 {1, A11, A12, A13},
+                   tr2 {2, A21, A22, A23};
     std::vector<Geom::Triangle> stupidtrs {tr1, tr2};
 
-    std::vector<Geom::Triangle> triangles = GetRandomTriangles(10);
+    /*
+    if (tr1.IsIntersectWithOther(tr2))
+        std::cout << "Yes\n";
+    else
+        std::cout << "No\n";
+    */
+
+    std::vector<Geom::Triangle> triangles = GetRandomTriangles(NTRS);
     std::vector<unsigned> Right_Answer = GetAnswer(triangles),
                           Alg_Answer = Alg::FindIntersections (triangles);
 
+    std::sort (Right_Answer.begin(), Right_Answer.end());
+    std::sort (Alg_Answer.begin(), Alg_Answer.end());
 
     std::cout << "Right_Answer is { ";
     for (auto i: Right_Answer)
         std::cout << i << " ";
     std::cout << "}" << std::endl;
 
-    std::cout << "Alg_Answer is { ";
+    std::cout << "Alg_Answer is   { ";
     for (auto i: Alg_Answer)
         std::cout << i << " ";
     std::cout << "}" << std::endl;
 
-    for (auto tr: triangles)
-        std::cout << tr << std::endl;
+    //for (auto tr: triangles)
+    //    std::cout << tr << std::endl;
     return 0;
 }

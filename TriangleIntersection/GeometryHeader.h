@@ -28,7 +28,7 @@ namespace Geom {
 
         explicit Point(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
 
-        bool isValid() const { return (x != NAN && y != NAN && z != NAN); }
+        bool isValid() const { return !(isnanf(x) || isnanf(y) || isnanf(z)); }
         float Abs() const { return std::sqrt(x * x + y * y + z * z); }
         Point operator + (Point& p) const;
         Point operator - (Point& p) const;
@@ -74,12 +74,11 @@ namespace Geom {
         explicit Line(Point A1, Point A2) { M = A1; vec = Vector(A1, A2); }
         explicit Line(Point M_, Vector vec_) { M = M_; vec = vec_; }
         bool isValid() const { return (M.isValid() && vec.isValid()); }
-        Point IntersectionWithOtherLine (Line other, bool *isCoincedent) const; // надо учитывать, что совпадение прямых - пересечение!
+        Point IntersectionWithOtherLine (Line other, bool *isCoincident) const;
     };
 
     struct Triangle {
         unsigned number;
-
         Point A1, A2, A3;
 
         Triangle() : A1(), A2(), A3() {}
@@ -101,14 +100,14 @@ namespace Geom {
         bool IsIntersectWithOther(Triangle other) const;
         bool IsIntersectThePlane (Plane plane) const;
         Interval IntersectWithLine (Line line) const;
-        friend std::ostream& operator << (std::ostream &os, Triangle& tr);
+        void dump (std::ostream& os) const;
     };
 
     struct Plane {
         float A = NAN, B = NAN, C = NAN, D = NAN;
 
         explicit Plane(Point A1, Point A2, Point A3);
-        bool isValid() const;
+        bool isValid() const { return !(isnanf(A) || isnanf(B) || isnanf(C) || isnanf(D)); }
         Line IntersectionWithOtherPlane(Plane other) const;
         bool IsEqualToOtherPlane (Plane other) const;
     };

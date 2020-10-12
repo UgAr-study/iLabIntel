@@ -5,7 +5,7 @@
 ///////Cube///////
 //////////////////
 
-void Alg::Cube::CheckEveryTriangleInCube (res_table& ans_table) {
+void Alg::Cube::CheckEveryTriangleInCube (res_table& ans_table) const {
     for (auto& i: triangles)
         for (auto& j: triangles) {
             if (j <= i)
@@ -17,7 +17,7 @@ void Alg::Cube::CheckEveryTriangleInCube (res_table& ans_table) {
         }
 }
 
-void Alg::Cube::CheckThisTriangle(Geom::Triangle *triangle, res_table& ans_table) {
+void Alg::Cube::CheckThisTriangle(Geom::Triangle *triangle, res_table& ans_table) const {
     for (auto& i: triangles)
         if (triangle->IsIntersectWithOther(*i)) {
             ans_table[i] = *i;
@@ -126,7 +126,7 @@ Alg::Octree::BuildTree(triangle_vec& triangles) {
     }
 
     auto res = new node_t{Cube{main_cube[0], main_cube[1], trs, spec_trs, nullptr}};
-    if (res->cube_.number_of_elems > max_num_of_elems_in_cube) {
+    if (res->cube_.getNumberOfElems() > max_num_of_elems_in_cube) {
         RecursiveBuild(res, 0);
     }
     return res;
@@ -134,7 +134,7 @@ Alg::Octree::BuildTree(triangle_vec& triangles) {
 
 void Alg::Octree::RecursiveBuild(Alg::node_t *cur_node, unsigned level) {
 
-    if (cur_node->cube_.number_of_elems < max_num_of_elems_in_cube || level >= maxDepth)
+    if (cur_node->cube_.getNumberOfElems() < max_num_of_elems_in_cube || level >= maxDepth)
         return;
 
     Alg::Cube* child_cubes = cur_node->cube_.CubeFraction(spec_trs);
@@ -168,10 +168,9 @@ Alg::FindIntersections (Alg::triangle_vec& triangles) {
     Alg::res_table answer_table;
     Alg::Octree octree{MAXDEPTH, NUMINCUBE, triangles};
 
-    RecursiveDescent(octree._top, answer_table);
+    octree.RecursiveDescent(answer_table);
 
-    for (auto& i: octree.spec_trs)
-        i.second->CheckThisTriangle(i.first, answer_table);
+    octree.CheckSpecialTriangles(answer_table);
 
     std::vector<unsigned> numbers_of_intersection_trs;
     auto iter = answer_table.begin();
@@ -181,7 +180,7 @@ Alg::FindIntersections (Alg::triangle_vec& triangles) {
     return numbers_of_intersection_trs;
 }
 
-void Alg::RecursiveDescent (Alg::node_t *top, Alg::res_table& ans_table) {
+void Alg::Octree::RecursiveDescent (Alg::node_t *top, Alg::res_table& ans_table) {
     if (top->_child[0] == nullptr) {
         top->cube_.CheckEveryTriangleInCube(ans_table);
         return;
@@ -191,6 +190,15 @@ void Alg::RecursiveDescent (Alg::node_t *top, Alg::res_table& ans_table) {
         if (i != nullptr)
             RecursiveDescent(i, ans_table);
     }
+}
+
+void Alg::Octree::RecursiveDescent(res_table &ans_table) {
+    RecursiveDescent(_top, ans_table);
+}
+
+void Alg::Octree::CheckSpecialTriangles(Alg::res_table& ans_table) {
+    for (auto& i: spec_trs)
+        i.second->CheckThisTriangle(i.first, ans_table);
 }
 
 bool Alg::DefineCube(const Alg::triangle_vec& triangles, Geom::Point *dots) {

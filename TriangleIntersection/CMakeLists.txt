@@ -24,13 +24,16 @@ add_executable (
         main.cpp
         Geometry.cpp
         GeometryHeader.h
-        Algorithm.cpp AlgorithmHeader.h)
+        Algorithm.cpp
+        AlgorithmHeader.h
+)
 
 add_executable (
         testTRInter
         Test/test_tr.cpp
         Geometry.cpp
         GeometryHeader.h
-        Test/TestGenerator.cpp)
+        Test/TestGenerator.cpp
+)
 
 target_link_libraries ( testTRInter ${GTEST_LIBRARIES} Threads::Threads )

@@ -37,11 +37,16 @@ Geom::Point Geom::Point::operator+(Geom::Point &p) const {
 ///////Triangle///////
 //////////////////////
 
+void Geom::Triangle::dump(std::ostream &os) const {
+    bool valid = isValid();
+    os << "Triangle № " << number << " [valid = " << valid << "]"
+        << "\n\tA1 (" << A1.x << ", " << A1.y << ", " << A1.z << ")\n"
+        << "\tA2 (" << A2.x << ", " << A2.y << ", " << A2.z << ")\n"
+        << "\tA3 (" << A3.x << ", " << A3.y << ", " << A3.z << ")\n";
+}
+
 std::ostream& Geom::operator << (std::ostream &os, Triangle& tr) {
-    os << "Triangle № " << tr.number
-       << "\n\tA1 (" << tr.A1.x << ", " << tr.A1.y << ", " << tr.A1.z << ")\n"
-       << "\tA2 (" << tr.A2.x << ", " << tr.A2.y << ", " << tr.A2.z << ")\n"
-       << "\tA3 (" << tr.A3.x << ", " << tr.A3.y << ", " << tr.A3.z << ")\n";
+    tr.dump(os);
     return os;
 }
 
@@ -149,12 +154,6 @@ Geom::Plane::Plane(Point A1, Point A2, Point A3) {
     D = -A1.x * A - A1.y * B - A1.z * C;
 }
 
-bool Geom::Plane::isValid() const {
-    if (A != NAN && B != NAN && C != NAN && D != NAN)
-        return true;
-    return false;
-}
-
 Geom::Line Geom::Plane::IntersectionWithOtherPlane(Plane other) const {
     if (IsEqualToOtherPlane(other))
         return Line{Point{0, 0, 0}, Vector{0, 0, 0}};
@@ -190,7 +189,7 @@ bool Geom::Plane::IsEqualToOtherPlane(Geom::Plane other) const {
 ////////Vector////////
 //////////////////////
 
-bool Geom::Vector::IsCollinearToOther(Vector other) const { //don't check if some is zero!
+bool Geom::Vector::IsCollinearToOther(Vector other) const {
     if (VectorMult(other).IsZero())
         return true;
     return false;
