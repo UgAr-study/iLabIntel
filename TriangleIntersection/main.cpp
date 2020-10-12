@@ -24,23 +24,7 @@ GetTriangles (std::vector<int>& p) {
     return trs;
 }
 
-void IntGenerator (int n_trs, int min, int max) {
-    std::ofstream file;
-    file.open("../Test/test.txt");
-
-    std::mt19937 generator(time(nullptr));
-    std::uniform_int_distribution<int> distribution(min, max);
-
-    if (file.is_open()) {
-        file << 9 * n_trs << " ";
-        for (int i = 0; i < 9 * n_trs; ++i)
-            file << distribution(generator) << " ";
-    }
-}
-
 int main() {
-    IntGenerator(300, 0, 50);
-
     int N;
     std::cin >> N;
     std::vector<int> dots;
@@ -58,7 +42,6 @@ int main() {
     for (auto i: answer)
         std::cout << i << " ";
     std::cout << std::endl;
-    for (auto i: answer)
-        std::cout << triangles[i];
+
     return 0;
 }
