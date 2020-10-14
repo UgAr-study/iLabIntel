@@ -61,19 +61,17 @@ bool Geom::Triangle::IsIntersectWithOther(Triangle other) const {
         return false;
 
     if (interln.vec.IsZero()){
-        auto intervals = new Interval[6] {Interval{A1, A2}, Interval{A2, A3}, Interval{A1, A3},
-                                               Interval{other.A1, other.A2}, Interval{other.A2, other.A3}, Interval{other.A1, other.A3}};
+        std::vector<Interval> intervals {Interval{A1, A2}, Interval{A2, A3}, Interval{A1, A3},
+                                         Interval{other.A1, other.A2}, Interval{other.A2, other.A3}, Interval{other.A1, other.A3}};
 
         for (int i = 0; i < 3; ++i) {
             for (int j = 3; j < 6; ++j) {
                 if (intervals[i].IsIntersectWithOther(intervals[j])) {
-                    delete[] intervals;
                     return true;
                 }
             }
         }
 
-        delete [] intervals;
         return false;
     }
 
@@ -162,7 +160,7 @@ Geom::Line Geom::Plane::IntersectionWithOtherPlane(Plane other) const {
     Vector v1{A, B, C}, v2{other.A, other.B, other.C};
     res.vec = v1.VectorMult(v2);
 
-    if (res.vec.IsZero())
+    if (res.vec.IsZero() || !isValid() || !other.isValid())
         return Line{};
 
     float a = (-other.D * v1.ScalarMult(v2) + D * v2.Abs() * v2.Abs()) /
@@ -178,6 +176,8 @@ Geom::Line Geom::Plane::IntersectionWithOtherPlane(Plane other) const {
 }
 
 bool Geom::Plane::IsEqualToOtherPlane(Geom::Plane other) const {
+    if (!isValid() || !other.isValid())
+        return false;
     Vector v1{A, B, C}, v2{other.A, other.B, other.C};
     if (v1.VectorMult(v2).IsZero() && D * other.A - A * other.D <= PRECISION)
         return true;

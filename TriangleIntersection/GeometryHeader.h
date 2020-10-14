@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <vector>
 #include <cmath>
 
 
@@ -81,12 +82,9 @@ namespace Geom {
         unsigned number;
         Point A1, A2, A3;
 
-        Triangle() : A1(), A2(), A3() {}
+        Triangle() : number(0), A1(), A2(), A3() {}
 
-        explicit Triangle(unsigned num, Point A1_, Point A2_, Point A3_) : number(num)
-                                                                         { A1 = A1_;
-                                                                           A2 = A2_;
-                                                                           A3 = A3_; }
+        explicit Triangle(unsigned num, Point A1_, Point A2_, Point A3_) : number(num), A1(A1_), A2(A2_), A3(A3_) {}
 
         explicit Triangle(unsigned num,
                           float x1, float y1, float z1,
@@ -106,7 +104,7 @@ namespace Geom {
     struct Plane {
         float A = NAN, B = NAN, C = NAN, D = NAN;
 
-        explicit Plane(Point A1, Point A2, Point A3);
+        Plane(Point A1, Point A2, Point A3);
         bool isValid() const { return !(isnanf(A) || isnanf(B) || isnanf(C) || isnanf(D)); }
         Line IntersectionWithOtherPlane(Plane other) const;
         bool IsEqualToOtherPlane (Plane other) const;

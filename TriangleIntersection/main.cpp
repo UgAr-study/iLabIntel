@@ -4,21 +4,14 @@
 #include "AlgorithmHeader.h"
 
 std::vector<Geom::Triangle>
-GetTriangles (std::vector<int>& p) {
+GetTriangles (std::vector<float>& p) {
     std::vector<Geom::Triangle> trs;
     for (unsigned i = 0; i < p.size() / 9; ++i) {
         unsigned begin = i * 9;
-        auto  x1 = static_cast<float>(p[begin]),
-                y1 = static_cast<float>(p[begin + 1]),
-                z1 = static_cast<float>(p[begin + 2]),
-                x2 = static_cast<float>(p[begin + 3]),
-                y2 = static_cast<float>(p[begin + 4]),
-                z2 = static_cast<float>(p[begin + 5]),
-                x3 = static_cast<float>(p[begin + 6]),
-                y3 = static_cast<float>(p[begin + 7]),
-                z3 = static_cast<float>(p[begin + 8]);
 
-        Geom::Triangle tr {i, x1, y1, z1, x2, y2, z2, x3, y3, z3};
+        Geom::Triangle tr {i, p[begin],     p[begin + 1], p[begin + 2],
+                              p[begin + 3], p[begin + 4], p[begin + 5],
+                              p[begin + 6], p[begin + 7], p[begin + 8]};
         trs.push_back(tr);
     }
     return trs;
@@ -27,10 +20,10 @@ GetTriangles (std::vector<int>& p) {
 int main() {
     int N;
     std::cin >> N;
-    std::vector<int> dots;
+    std::vector<float> dots;
     dots.reserve(9 * N);
     for (int i = 0 ; i < 9 * N; ++i) {
-        int dot;
+        float dot;
         std::cin >> dot;
         dots.push_back(dot);
     }

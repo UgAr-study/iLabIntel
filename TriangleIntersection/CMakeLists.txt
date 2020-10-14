@@ -20,7 +20,7 @@ add_executable(
 )
 
 add_executable (
-        TRInter
+        TriangleIntersection
         main.cpp
         Geometry.cpp
         GeometryHeader.h
@@ -29,11 +29,11 @@ add_executable (
 )
 
 add_executable (
-        testTRInter
+        GoogleTestGeometry
         Test/test_tr.cpp
         Geometry.cpp
         GeometryHeader.h
         Test/TestGenerator.cpp
 )
 
-target_link_libraries ( testTRInter ${GTEST_LIBRARIES} Threads::Threads )
+target_link_libraries ( GoogleTestGeometry ${GTEST_LIBRARIES} Threads::Threads )
