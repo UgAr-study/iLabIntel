@@ -1,9 +1,4 @@
-#include "../GeometryHeader.h"
-#include "../AlgorithmHeader.h"
-#include <ctime>
-#include <algorithm>
-
-enum {MAXCOORD = 50, NTRS = 300};
+#include "TestHeader.h"
 
 std::vector<int>
 IntGenerator (int n, int min, int max) {
@@ -59,6 +54,7 @@ GetAnswer (std::vector<Geom::Triangle> &trs) {
     return res;
 }
 
+/*
 int main () {
 
     Geom::Point A11 (6, 6, 3),
@@ -78,7 +74,7 @@ int main () {
         std::cout << "Yes\n";
     else
         std::cout << "No\n";
-    */
+
 
     std::vector<Geom::Triangle> triangles = GetRandomTriangles(NTRS);
     std::vector<unsigned> Right_Answer = GetAnswer(triangles),
@@ -100,4 +96,4 @@ int main () {
     //for (auto tr: triangles)
     //    std::cout << tr << std::endl;
     return 0;
-}
+}*/

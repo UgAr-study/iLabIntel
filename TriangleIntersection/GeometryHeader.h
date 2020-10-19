@@ -29,11 +29,13 @@ namespace Geom {
 
         explicit Point(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
 
+
         bool isValid() const { return !(isnanf(x) || isnanf(y) || isnanf(z)); }
         float Abs() const { return std::sqrt(x * x + y * y + z * z); }
         Point operator + (Point& p) const;
         Point operator - (Point& p) const;
         Point operator / (float a) const;
+        Point operator * (float a) const;
     };
 
     struct Vector {
@@ -49,6 +51,7 @@ namespace Geom {
 
         explicit Vector(float x, float y, float z) : V(x, y, z) {}
 
+        bool IsPerpendicularToOther (Vector other) const;
         bool IsCollinearToOther(Vector other) const;
         bool IsZero() const;
         bool isValid() const { return V.isValid(); }
@@ -64,6 +67,7 @@ namespace Geom {
         bool IsPointBelongsToInterval (Point M) const;
         bool IsIntersectWithOther (Interval other) const;
         bool IsOverlapWithOther (Interval other) const;
+        float Length() const { Vector v{C1, C2}; return v.Abs(); }
     };
 
     struct Line {
@@ -101,12 +105,23 @@ namespace Geom {
         void dump (std::ostream& os) const;
     };
 
+    /*
+    struct Square {
+        Point left_bot, right_top;
+        Square() : left_bot(), right_top() {}
+        explicit Square(Point l_b, Point r_t) : left_bot(l_b), right_top(r_t) {}
+        Point IntersectionWithLine (Line line);
+        bool IsPointBelongsToSquare (Point p) const;
+    };*/
+
+
     struct Plane {
         float A = NAN, B = NAN, C = NAN, D = NAN;
 
         Plane(Point A1, Point A2, Point A3);
         bool isValid() const { return !(isnanf(A) || isnanf(B) || isnanf(C) || isnanf(D)); }
         Line IntersectionWithOtherPlane(Plane other) const;
+        Point IntersectionWithLine (Line line) const;
         bool IsEqualToOtherPlane (Plane other) const;
     };
 

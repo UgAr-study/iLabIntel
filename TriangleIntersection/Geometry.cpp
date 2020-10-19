@@ -32,6 +32,14 @@ Geom::Point Geom::Point::operator+(Geom::Point &p) const {
     return res;
 }
 
+Geom::Point Geom::Point::operator*(float a) const {
+    Point res;
+    res.x = x * a;
+    res.y = y * a;
+    res.z = z * a;
+    return res;
+}
+
 
 //////////////////////
 ///////Triangle///////
@@ -92,10 +100,12 @@ bool Geom::Triangle::isValid() const {
 }
 
 bool Geom::Triangle::IsIntersectThePlane(Geom::Plane plane) const {
+    if (!plane.isValid())
+        return false;
     float sign1, sign2, sign3;
-    sign1 = plane.A * A1.x + plane.B * A1.y + plane.C * A1.z;
-    sign2 = plane.A * A2.x + plane.B * A2.y + plane.C * A2.z;
-    sign3 = plane.A * A3.x + plane.B * A3.y + plane.C * A3.z;
+    sign1 = plane.A * A1.x + plane.B * A1.y + plane.C * A1.z + plane.D;
+    sign2 = plane.A * A2.x + plane.B * A2.y + plane.C * A2.z + plane.D;
+    sign3 = plane.A * A3.x + plane.B * A3.y + plane.C * A3.z + plane.D;
 
     if (sign1 * sign2 <= PRECISION ||
         sign2 * sign3 <= PRECISION ||
@@ -124,7 +134,11 @@ Geom::Interval Geom::Triangle::IntersectWithLine(Line line) const {
         res.C1 = p_i1;
         if (interval2.IsPointBelongsToInterval(p_i2))
             res.C2 = p_i2;
-        res.C2 = p_i3;
+        else
+            res.C2 = p_i3;
+
+        if (res.Length() >= PRECISION)
+            return res;
     }
 
     if (interval2.IsPointBelongsToInterval(p_i2)) {
@@ -134,6 +148,39 @@ Geom::Interval Geom::Triangle::IntersectWithLine(Line line) const {
 
     return res;
 }
+
+
+/*
+//////////////////////
+////////Square////////
+//////////////////////
+
+Geom::Point Geom::Square::IntersectionWithLine (Line line) {
+    Point p;
+    if (std::abs (left_bot.x - right_top.x) <= PRECISION)
+        p = Point {left_bot.x, right_top.y, left_bot.z};
+    else if (std::abs (left_bot.y - right_top.y) <= PRECISION)
+        p = Point {right_top.x, left_bot.y, left_bot.z};
+    else if (std::abs (left_bot.z - right_top.z) <= PRECISION)
+        p = Point {right_top.x, left_bot.y, right_top.z};
+
+    Plane plane {left_bot, right_top, p};
+    Point int_p = plane.IntersectionWithLine(line);
+    if (!int_p.isValid() || !IsPointBelongsToSquare(int_p))
+        return {};
+    return int_p;
+}
+
+bool Geom::Square::IsPointBelongsToSquare(Geom::Point p) const {
+    if (!p.isValid())
+        return false;
+    if (p.x >= left_bot.x && p.x <= right_top.x &&
+        p.y >= left_bot.y && p.y <= right_top.y &&
+        p.z >= left_bot.z && p.z <= right_top.z)
+        return true;
+    return false;
+}
+*/
 
 //////////////////////
 ////////Plane/////////
@@ -184,6 +231,17 @@ bool Geom::Plane::IsEqualToOtherPlane(Geom::Plane other) const {
     return false;
 }
 
+Geom::Point Geom::Plane::IntersectionWithLine(Geom::Line line) const {
+    Vector n {A, B, C};
+    if (n.IsPerpendicularToOther(line.vec))
+        return {};
+    float t = -(A * line.M.x + B * line.M.y + C * line.M.z + D) /
+               (A * line.vec.V.x + B * line.vec.V.y + C * line.vec.V.z);
+    Point p = line.vec.V * t;
+    Point res = line.M + p;
+    return res;
+}
+
 
 //////////////////////
 ////////Vector////////
@@ -227,12 +285,20 @@ float Geom::Vector::ScalarMult(Geom::Vector second_vec) const {
     return (std::abs(scalar) <= PRECISION) ? 0 : scalar;
 }
 
+bool Geom::Vector::IsPerpendicularToOther(Vector other) const {
+    if (!isValid() || !other.isValid())
+        return false;
+    if (std::abs (ScalarMult(other)) <= PRECISION)
+        return true;
+    return false;
+}
+
 //////////////////////
 /////////Line/////////
 //////////////////////
 
 Geom::Point Geom::Line::IntersectionWithOtherLine(Geom::Line other, bool *isCoinsedent) const {
-    Point res;
+    Point res; //P1 + V1 * a1 = P2 + V2 * a2 | * V2 -> a1 = ... -> find res
     Vector v12 = vec.VectorMult(other.vec), p{M, other.M};
     Vector vp = p.VectorMult(other.vec);
 

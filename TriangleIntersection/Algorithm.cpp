@@ -98,7 +98,47 @@ Alg::Cube::CubeFraction (special_trs& spec_trs) {
     return child_cubes;
 }
 
+/*
+bool Alg::Cube::IsOverlapWithInterval(Geom::Interval interval) const {
+    //check intersection with square, then check signs of ends of the interval
+    Geom::Point p000 (left_bot),
+                p100 {right_top.x, left_bot.y, left_bot.z},
+                p010 {left_bot.x, right_top.y, left_bot.z},
+                p001 {left_bot.x, left_bot.y, right_top.z},
+                p110 {right_top.x, right_top.y, left_bot.z},
+                p101 {right_top.x, left_bot.y, right_top.z},
+                p011 {left_bot.x, right_top.y, right_top.z},
+                p111 (right_top);
 
+    std::vector<Geom::Square> faces{ Geom::Square{p000, p110},
+                                     Geom::Square{p000, p101},
+                                     Geom::Square{p000, p011},
+                                     Geom::Square{p100, p111},
+                                     Geom::Square{p010, p111},
+                                     Geom::Square{p001, p111} };
+
+    std::vector<Geom::Point> inter_points_candidates;
+    inter_points_candidates.reserve(6);
+    Geom::Line line {interval.C1, interval.C2};
+    for (auto i : faces)
+        inter_points_candidates.push_back(i.IntersectionWithLine(line));
+    std::vector<Geom::Point> inter_points;
+    inter_points.reserve(2);
+    int inter_points_[2];
+    for (int i = 0, j = 0; i < 6; ++i) {
+        if (inter_points_candidates[i].isValid()) {
+            inter_points_[j++] = i;
+        }
+    }
+    for (auto i: inter_points_candidates)
+        if (i.isValid())
+            inter_points.push_back(i);
+    if (inter_points.empty())
+        return false;
+
+    return false;
+}
+*/
 
 //////////////////
 ///////Octree/////
@@ -129,6 +169,7 @@ Alg::Octree::BuildTree(triangle_vec& triangles) {
     if (res->cube_.getNumberOfElems() > max_num_of_elems_in_cube) {
         RecursiveBuild(res, 0);
     }
+
     return res;
 }
 

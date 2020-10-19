@@ -2,6 +2,7 @@
 #include <fstream>
 #include "GeometryHeader.h"
 #include "AlgorithmHeader.h"
+//#include "Test/TestHeader.h"
 
 std::vector<Geom::Triangle>
 GetTriangles (std::vector<float>& p) {
@@ -29,11 +30,24 @@ int main() {
     }
 
     std::vector<Geom::Triangle> triangles = GetTriangles(dots);
+
+    /*
+    std::vector<unsigned> nx2answer = GetAnswer(triangles);
+
+    std::cout << "N^2 algorithm answer { ";
+    for (auto i: nx2answer)
+        std::cout << i << " ";
+    std::cout << "}" << std::endl;
+    */
+
     std::vector<unsigned> answer = Alg::FindIntersections(triangles);
     std::sort (answer.begin(), answer.end());
 
+
+    //std::cout << "Octree alg answer { ";
     for (auto i: answer)
         std::cout << i << " ";
+    //std::cout << "}" << std::endl;
     std::cout << std::endl;
 
     return 0;
