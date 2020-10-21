@@ -2,14 +2,13 @@ cmake_minimum_required (VERSION 3.15)
 project (TriangleIntersection)
 
 set (CMAKE_CXX_STANDARD 14)
-#[[
+
 find_package (GTest REQUIRED)
 find_package (Threads REQUIRED)
 
 include_directories (
         ${GTEST_INCLUDE_DIRS}
 )
-
 
 add_executable(
         RandTest
@@ -19,17 +18,17 @@ add_executable(
         Algorithm.cpp
         AlgorithmHeader.h
 )
-]]
 
 add_executable (
-        TriangleIntersection
+        TriangleIntersection1
         main.cpp
         Geometry.cpp
+        Test/TestGenerator.cpp
         GeometryHeader.h
         Algorithm.cpp
         AlgorithmHeader.h
+        Test/TestHeader.h
 )
-#[[
 
 add_executable (
         GoogleTestGeometry
@@ -37,6 +36,6 @@ add_executable (
         Geometry.cpp
         GeometryHeader.h
         Test/TestGenerator.cpp
-)
+        Test/TestHeader.h)
 
-target_link_libraries ( GoogleTestGeometry ${GTEST_LIBRARIES} Threads::Threads )]]
+target_link_libraries ( GoogleTestGeometry ${GTEST_LIBRARIES} Threads::Threads )
