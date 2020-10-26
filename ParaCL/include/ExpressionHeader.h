@@ -2,9 +2,9 @@
 
 #include "MainHeader.h"
 
-Node* BuildSyntaxTree (std::vector<char>& text, unsigned& cur_pos);
-Node* Expression      (std::vector<char>& text, unsigned& cur_pos);
-Node* Multiplication  (std::vector<char>& text, unsigned& cur_pos);
-Node* Term            (std::vector<char>& text, unsigned& cur_pos);
+Node* BuildSyntaxTree (std::vector<Node *>::iterator &cur_iter);
+Node* Expression      (std::vector<Node *>::iterator &cur_iter);
+Node* Multiplication  (std::vector<Node *>::iterator &cur_iter);
+Node* Term            (std::vector<Node *>::iterator &cur_iter);
 
 int TreeCalculator (Node* top);

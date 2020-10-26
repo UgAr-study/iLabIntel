@@ -2,9 +2,9 @@
 #include "../include/LexemHeader.h"
 #include "../include/ExpressionHeader.h"
 
-Node* BuildSyntaxTree (std::vector<char>& text, unsigned& cur_pos) {
+Node* BuildSyntaxTree (std::vector<Node *>::iterator &cur_iter) {
     Node* tree;
-    tree = Expression (text, cur_pos);
+    tree = Expression (cur_iter);
 
     /*
     if (end_of_expr != 1) {
@@ -21,15 +21,14 @@ Node* BuildSyntaxTree (std::vector<char>& text, unsigned& cur_pos) {
     return tree;
 }
 
-Node* Expression (std::vector<char>& text, unsigned& cur_pos) {
+Node* Expression (std::vector<Node *>::iterator &cur_iter) {
     Node *e_left;
     BinOp *expression;
 
-    e_left = Multiplication (text, cur_pos);
+    e_left = Multiplication (cur_iter);
 
     if (e_left != nullptr) {
-        ++cur_pos;
-        Node* cur_lex = GetLexem(text, cur_pos);
+        Node* cur_lex = *(++cur_iter);
 
         if (cur_lex->getType() == END) {
             delete cur_lex;
@@ -37,11 +36,11 @@ Node* Expression (std::vector<char>& text, unsigned& cur_pos) {
         }
 
         while (IsAddSub(cur_lex)) {
-            expression = (BinOp*) cur_lex;
+            expression = static_cast<BinOp*>(cur_lex);
             expression->setLhs (e_left);
-            ++cur_pos;
+            ++cur_iter;
 
-            Node* rhs = Multiplication (text, cur_pos);
+            Node* rhs = Multiplication (cur_iter);
 
             if (rhs == nullptr) {
                 std::cout << "Wrong format: expected a number or expression\n";
@@ -50,24 +49,22 @@ Node* Expression (std::vector<char>& text, unsigned& cur_pos) {
             }
 
             expression->setRhs (rhs);
-            e_left = (Node*) expression;
-            ++cur_pos;
-            cur_lex = GetLexem(text, cur_pos);
+            e_left = static_cast<Node*>(expression);
+            cur_lex = *(++cur_iter);
         }
     }
 
     return e_left;
 }
 
-Node* Multiplication (std::vector<char>& text, unsigned& cur_pos) {
+Node* Multiplication (std::vector<Node *>::iterator &cur_iter) {
     Node* m_left;
     BinOp* mult;
 
-    m_left = Term (text, cur_pos);
+    m_left = Term (cur_iter);
 
     if (m_left != nullptr) {
-        ++cur_pos;
-        Node* cur_lex = GetLexem (text, cur_pos);
+        Node* cur_lex = *(++cur_iter);
 
         if (cur_lex->getType() == END) {
             delete cur_lex;
@@ -75,11 +72,11 @@ Node* Multiplication (std::vector<char>& text, unsigned& cur_pos) {
         }
 
         while (IsMulDiv(cur_lex)) {
-            mult = (BinOp*) cur_lex;
+            mult = static_cast<BinOp*>(cur_lex);
             mult->setLhs(m_left);
-            ++cur_pos;
+            ++cur_iter;
 
-            Node* rhs = Term (text, cur_pos);
+            Node* rhs = Term (cur_iter);
 
             if (rhs == nullptr) {
                 std::cout << "Wrong format: expected a number or expression\n";
@@ -88,18 +85,17 @@ Node* Multiplication (std::vector<char>& text, unsigned& cur_pos) {
             }
 
             mult->setRhs (rhs);
-            m_left = (Node*) mult;
-            ++cur_pos;
-            cur_lex = GetLexem (text, cur_pos);
+            m_left = static_cast<Node*>(mult);
+            cur_lex = *(++cur_iter);
         }
     }
 
     return m_left;
 }
 
-Node* Term (std::vector<char>& text, unsigned& cur_pos) {
+Node* Term (std::vector<Node *>::iterator &cur_iter) {
     Node* term = nullptr;
-    Node* cur_lex = GetLexem (text, cur_pos);
+    Node* cur_lex = *cur_iter;
 
     Node_t type = cur_lex->getType();
     if (type == END)
@@ -109,16 +105,15 @@ Node* Term (std::vector<char>& text, unsigned& cur_pos) {
         return cur_lex;
 
     if (type == VARNAME) {
+
         //TODO add in unordered map
     }
 
     if (IsLBrace(cur_lex)) {
-        ++cur_pos;
-        term = Expression (text, cur_pos);
-        ++cur_pos;
+        term = Expression (++cur_iter);
 
         delete cur_lex;
-        cur_lex = GetLexem (text, cur_pos);
+        cur_lex = *(++cur_iter);
 
         if (!IsRBrace(cur_lex)) {
             std::cout << "Wrong format: expected ')'\n";

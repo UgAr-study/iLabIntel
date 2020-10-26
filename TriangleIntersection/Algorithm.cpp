@@ -8,7 +8,7 @@
 void Alg::Cube::CheckEveryTriangleInCube (res_table& ans_table) const {
     for (auto& i: triangles)
         for (auto& j: triangles) {
-            if (j <= i)
+            if (j->number <= i->number) //j.number && i.number
                 continue;
             if (i->IsIntersectWithOther(*j)) {
                 ans_table[i] = *i;

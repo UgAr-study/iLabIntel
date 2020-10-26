@@ -42,6 +42,119 @@ Geom::Point Geom::Point::operator*(float a) const {
 
 
 //////////////////////
+////////Vector////////
+//////////////////////
+
+bool Geom::Vector::IsCollinearToOther(Vector other) const {
+    if (VectorMult(other).IsZero())
+        return true;
+    return false;
+}
+
+Geom::Vector Geom::Vector::VectorMult(Vector second_vec) const {
+    Vector res;
+
+    res.V.x = Determinant(V.y, V.z,
+                          second_vec.V.y, second_vec.V.z);
+    if (std::abs(res.V.x) <= PRECISION)
+        res.V.x = 0;
+
+    res.V.y = -Determinant(V.x, V.z,
+                           second_vec.V.x, second_vec.V.z);
+    if (std::abs(res.V.y) <= PRECISION)
+        res.V.y = 0;
+
+    res.V.z = Determinant(V.x, V.y,
+                          second_vec.V.x, second_vec.V.y);
+    if (std::abs(res.V.z) <= PRECISION)
+        res.V.z = 0;
+
+    return res;
+}
+
+bool Geom::Vector::IsZero() const {
+    if (V.Abs() <= PRECISION)
+        return true;
+    return false;
+}
+
+float Geom::Vector::ScalarMult(Geom::Vector second_vec) const {
+    float scalar = V.x * second_vec.V.x + V.y * second_vec.V.y + V.z * second_vec.V.z;
+    return (std::abs(scalar) <= PRECISION) ? 0 : scalar;
+}
+
+bool Geom::Vector::IsPerpendicularToOther(Vector other) const {
+    if (!isValid() || !other.isValid())
+        return false;
+    if (std::abs (ScalarMult(other)) <= PRECISION)
+        return true;
+    return false;
+}
+
+//////////////////////
+///////Interval///////
+//////////////////////
+
+bool Geom::Interval::IsPointBelongsToInterval(Point M) const {
+    if (!M.isValid())
+        return false;
+
+    Vector v1 {C1, M}, v2 {C2, M};
+    if (v1.IsCollinearToOther(v2) && v1.ScalarMult(v2) <= PRECISION)
+        return true;
+    return false;
+}
+
+bool Geom::Interval::IsOverlapWithOther(Interval other) const {
+    Vector v1 {C1, C2},
+           v2 {other.C1, other.C2};
+    if (!v1.IsCollinearToOther(v2))
+        return false;
+
+    if (IsPointBelongsToInterval(other.C1) || IsPointBelongsToInterval(other.C2) ||
+        other.IsPointBelongsToInterval(C1) || other.IsPointBelongsToInterval(C2))
+        return true;
+
+    return false;
+}
+
+bool Geom::Interval::IsIntersectWithOther(Interval other) const {
+    Line line1 {C1, C2}, line2 {other.C1, other.C2};
+    bool coinc;
+    Point in_p = line1.IntersectionWithOtherLine(line2, &coinc);
+    if (in_p.isValid())
+        if (IsPointBelongsToInterval(in_p) && other.IsPointBelongsToInterval(in_p))
+            return true;
+    return false;
+}
+
+//////////////////////
+/////////Line/////////
+//////////////////////
+
+Geom::Point Geom::Line::IntersectionWithOtherLine(Geom::Line other, bool *isCoinsedent) const {
+    Point res; //P1 + V1 * a1 = P2 + V2 * a2 | * V2 -> a1 = ... -> find res
+    Vector v12 = vec.VectorMult(other.vec), p{M, other.M};
+    Vector vp = p.VectorMult(other.vec);
+
+    if (v12.IsZero()) {
+        *isCoinsedent = false;
+        if (Vector{M, other.M}.IsCollinearToOther(vec))
+            *isCoinsedent = true;
+        return res;
+    }
+
+    float a = vp.Abs() / v12.Abs();
+    if (vp.ScalarMult(v12) <= PRECISION)
+        a = -a;
+
+    res.x = M.x + a * vec.V.x;
+    res.y = M.y + a * vec.V.y;
+    res.z = M.z + a * vec.V.z;
+    return res;
+}
+
+//////////////////////
 ///////Triangle///////
 //////////////////////
 
@@ -84,7 +197,7 @@ bool Geom::Triangle::IsIntersectWithOther(Triangle other) const {
     }
 
     Interval intersect_interval1 = IntersectWithLine(interln),
-             intersect_interval2 = other.IntersectWithLine(interln);
+             intersect_interval2 = other.IntersectWithLine(interln); //???
 
     if (intersect_interval1.IsOverlapWithOther(intersect_interval2))
         return true;
@@ -118,7 +231,7 @@ bool Geom::Triangle::IsIntersectThePlane(Geom::Plane plane) const {
 Geom::Interval Geom::Triangle::IntersectWithLine(Line line) const {
     Interval interval1 {A1, A2}, interval2 {A2, A3}, interval3 {A1, A3}, res;
     Line line1 {A1, A2}, line2 {A2, A3}, line3 {A1, A3};
-    bool coincident1, coincident2, coincident3;
+    bool coincident1 = false, coincident2 = false, coincident3 = false;
     Point p_i1 = line.IntersectionWithOtherLine(line1, &coincident1),
           p_i2 = line.IntersectionWithOtherLine(line2, &coincident2),
           p_i3 = line.IntersectionWithOtherLine(line3, &coincident3);
@@ -148,39 +261,6 @@ Geom::Interval Geom::Triangle::IntersectWithLine(Line line) const {
 
     return res;
 }
-
-
-/*
-//////////////////////
-////////Square////////
-//////////////////////
-
-Geom::Point Geom::Square::IntersectionWithLine (Line line) {
-    Point p;
-    if (std::abs (left_bot.x - right_top.x) <= PRECISION)
-        p = Point {left_bot.x, right_top.y, left_bot.z};
-    else if (std::abs (left_bot.y - right_top.y) <= PRECISION)
-        p = Point {right_top.x, left_bot.y, left_bot.z};
-    else if (std::abs (left_bot.z - right_top.z) <= PRECISION)
-        p = Point {right_top.x, left_bot.y, right_top.z};
-
-    Plane plane {left_bot, right_top, p};
-    Point int_p = plane.IntersectionWithLine(line);
-    if (!int_p.isValid() || !IsPointBelongsToSquare(int_p))
-        return {};
-    return int_p;
-}
-
-bool Geom::Square::IsPointBelongsToSquare(Geom::Point p) const {
-    if (!p.isValid())
-        return false;
-    if (p.x >= left_bot.x && p.x <= right_top.x &&
-        p.y >= left_bot.y && p.y <= right_top.y &&
-        p.z >= left_bot.z && p.z <= right_top.z)
-        return true;
-    return false;
-}
-*/
 
 //////////////////////
 ////////Plane/////////
@@ -243,117 +323,11 @@ Geom::Point Geom::Plane::IntersectionWithLine(Geom::Line line) const {
 }
 
 
-//////////////////////
-////////Vector////////
-//////////////////////
 
-bool Geom::Vector::IsCollinearToOther(Vector other) const {
-    if (VectorMult(other).IsZero())
-        return true;
-    return false;
-}
 
-Geom::Vector Geom::Vector::VectorMult(Vector second_vec) const {
-    Vector res;
 
-    res.V.x = Determinant(V.y, V.z,
-                          second_vec.V.y, second_vec.V.z);
-    if (std::abs(res.V.x) <= PRECISION)
-        res.V.x = 0;
 
-    res.V.y = -Determinant(V.x, V.z,
-                          second_vec.V.x, second_vec.V.z);
-    if (std::abs(res.V.y) <= PRECISION)
-        res.V.y = 0;
 
-    res.V.z = Determinant(V.x, V.y,
-                          second_vec.V.x, second_vec.V.y);
-    if (std::abs(res.V.z) <= PRECISION)
-        res.V.z = 0;
-
-    return res;
-}
-
-bool Geom::Vector::IsZero() const {
-    if (V.Abs() <= PRECISION)
-        return true;
-    return false;
-}
-
-float Geom::Vector::ScalarMult(Geom::Vector second_vec) const {
-    float scalar = V.x * second_vec.V.x + V.y * second_vec.V.y + V.z * second_vec.V.z;
-    return (std::abs(scalar) <= PRECISION) ? 0 : scalar;
-}
-
-bool Geom::Vector::IsPerpendicularToOther(Vector other) const {
-    if (!isValid() || !other.isValid())
-        return false;
-    if (std::abs (ScalarMult(other)) <= PRECISION)
-        return true;
-    return false;
-}
-
-//////////////////////
-/////////Line/////////
-//////////////////////
-
-Geom::Point Geom::Line::IntersectionWithOtherLine(Geom::Line other, bool *isCoinsedent) const {
-    Point res; //P1 + V1 * a1 = P2 + V2 * a2 | * V2 -> a1 = ... -> find res
-    Vector v12 = vec.VectorMult(other.vec), p{M, other.M};
-    Vector vp = p.VectorMult(other.vec);
-
-    if (v12.IsZero()) {
-        *isCoinsedent = false;
-        if (Vector{M, other.M}.IsCollinearToOther(vec))
-            *isCoinsedent = true;
-        return res;
-    }
-
-    float a = vp.Abs() / v12.Abs();
-    if (vp.ScalarMult(v12) <= PRECISION)
-        a = -a;
-
-    res.x = M.x + a * vec.V.x;
-    res.y = M.y + a * vec.V.y;
-    res.z = M.z + a * vec.V.z;
-    return res;
-}
-
-//////////////////////
-///////Interval///////
-//////////////////////
-
-bool Geom::Interval::IsPointBelongsToInterval(Point M) const {
-    if (!M.isValid())
-        return false;
-
-    Vector v1 {C1, M}, v2 {C2, M};
-    if (v1.IsCollinearToOther(v2) && v1.ScalarMult(v2) <= PRECISION)
-        return true;
-    return false;
-}
-
-bool Geom::Interval::IsOverlapWithOther(Interval other) const {
-    Vector v11 {C1, other.C1},
-           v21 {C2, other.C1},
-           v12 {C1, other.C2},
-           v22 {C2, other.C2};
-    if (!v11.IsCollinearToOther(v22))
-        return false;
-    if (v11.ScalarMult(v21) <= PRECISION || v12.ScalarMult(v22) <= PRECISION)
-        return true;
-    return false;
-}
-
-bool Geom::Interval::IsIntersectWithOther(Interval other) const {
-    Line line1 {C1, C2}, line2 {other.C1, other.C1};
-    bool coinc;
-    Point in_p = line1.IntersectionWithOtherLine(line2, &coinc);
-    if (in_p.isValid())
-        if (IsPointBelongsToInterval(in_p) && other.IsPointBelongsToInterval(in_p))
-            return true;
-    return false;
-}
 
 //////////////////////
 /////HelpFunctions////

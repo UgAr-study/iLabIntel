@@ -1,5 +1,16 @@
 #include "../include/LexemHeader.h"
 
+std::vector<Node*>
+Lexer (std::vector<char>& text) {
+    std::vector<Node*> lexems;
+    unsigned cur_pos = 0;
+    for (; cur_pos < text.size(); ++cur_pos) {
+        lexems.push_back(GetLexem(text, cur_pos));
+        ++cur_pos;
+    }
+    return lexems;
+}
+
 Node* GetLexem (std::vector<char>& text, unsigned& cur_pos) {
     int flag = 0;
 
@@ -25,7 +36,7 @@ Node* GetLexem (std::vector<char>& text, unsigned& cur_pos) {
         }
     }
 
-    while (std::isspace(text[cur_pos++]));
+    //while (std::isspace(text[cur_pos++]));
 
     if (std::isdigit(text[cur_pos])) {
         int num = GetNumber (text, cur_pos);

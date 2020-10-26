@@ -13,5 +13,7 @@ IntGenerator (int n, int min, int max);
 std::vector<Geom::Triangle>
 GetRandomTriangles (int tr_num);
 
-std::vector<unsigned>
+std::unordered_map<unsigned, std::vector<unsigned>>
 GetAnswer (std::vector<Geom::Triangle> &trs);
+
+void DumpAnswer (std::unordered_map<unsigned, std::vector<unsigned>>& ans_table);

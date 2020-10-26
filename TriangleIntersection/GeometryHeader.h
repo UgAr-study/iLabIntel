@@ -105,15 +105,6 @@ namespace Geom {
         void dump (std::ostream& os) const;
     };
 
-    /*
-    struct Square {
-        Point left_bot, right_top;
-        Square() : left_bot(), right_top() {}
-        explicit Square(Point l_b, Point r_t) : left_bot(l_b), right_top(r_t) {}
-        Point IntersectionWithLine (Line line);
-        bool IsPointBelongsToSquare (Point p) const;
-    };*/
-
 
     struct Plane {
         float A = NAN, B = NAN, C = NAN, D = NAN;

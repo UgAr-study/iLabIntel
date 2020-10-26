@@ -1,8 +1,21 @@
 #include "../include/ParserHeader.h"
 #include "../include/LexemHeader.h"
 
-void Parser (std::vector<char>& text) {
-    unsigned cur_pos = 0;
+void Parser (std::vector<Node*> lexems) {
+
+    for (auto lexem = lexems.begin(); lexem != lexems.end(); ++lexem) {
+        Node_t type = (*lexem)->getType();
+        if (type == END)
+            break;
+
+        if (type == FUNC) {
+            Func func = *(static_cast<Func*>(*lexem));
+            if (func.getFunction() == PRINT) {
+                func.
+            }
+        }
+    }
+
     for (; cur_pos < text.size(); ++cur_pos) {
         Node* cur_lex = GetLexem(text, cur_pos);
         Node_t type = cur_lex->getType();

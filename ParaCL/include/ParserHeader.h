@@ -1,4 +1,4 @@
 #pragma once
 #include "MainHeader.h"
 
-void Parser (std::vector<char>& text);
+void Parser (std::vector<Node*> lexems);

@@ -42,7 +42,7 @@ class Expr: public Node {
 
 public:
     Expr();
-    Expr(std::vector<char> &text, unsigned &cur_pos);
+    Expr(std::vector<Node*>::iterator &cur_iter);
     int Culculate();
 };
 
@@ -64,6 +64,7 @@ public:
     explicit Func(Foo_t type)
         : func (type), Node(nullptr, FUNC) {};
     Foo_t getFunction () { return func; }
+    Expr getExpression () const {}
 };
 
 class Num: public Node {

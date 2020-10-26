@@ -35,23 +35,26 @@ GetRandomTriangles (int tr_num) {
     return trs;
 }
 
-std::vector<unsigned>
+std::unordered_map<unsigned, std::vector<unsigned>>
 GetAnswer (std::vector<Geom::Triangle> &trs) {
-    std::unordered_map<unsigned, int> ans_table;
-    std::vector<unsigned> res;
+    std::unordered_map<unsigned, std::vector<unsigned>> ans_table;
+
     for (auto i: trs)
         for (auto j: trs)
-            if (j.number != i.number)
-                if (i.IsIntersectWithOther(j)) {
-                    ans_table[i.number] = 1;
-                    ans_table[j.number] = 1;
-                }
+            if (j.number > i.number)
+                if (i.IsIntersectWithOther(j))
+                    ans_table[i.number].push_back(j.number);
 
-    res.reserve(ans_table.size());
-    for (auto i: ans_table)
-        res.push_back(i.first);
+    return ans_table;
+}
 
-    return res;
+void DumpAnswer (std::unordered_map<unsigned, std::vector<unsigned>>& ans_table) {
+    for (auto& i: ans_table) {
+        std::cout << "Triangle №" << i.first << " intersects with:" << std::endl;
+        for (auto j: i.second) {
+            std::cout << "\t" << j << ";" << std::endl;
+        }
+    }
 }
 
 /*

@@ -1,6 +1,9 @@
 #pragma once
 #include "MainHeader.h"
 
+std::vector<Node*>
+Lexer (std::vector<char>& text);
+
 Node* GetLexem (std::vector<char>& text, unsigned& cur_pos);
 
 std::string
