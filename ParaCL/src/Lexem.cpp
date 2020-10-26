@@ -161,7 +161,7 @@ int GetNumber (std::vector<char>& text, unsigned& cur_pos) {
     return res;
 }
 
-void PrintLexem (Node* lex) {
+void PrintLexem (const Node* lex) {
     switch (lex->getType()) {
 
         case BINOP: {

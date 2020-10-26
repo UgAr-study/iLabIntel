@@ -12,7 +12,7 @@ int Expr::Culculate() {
     return TreeCalculator (top);
 }
 
-Expr::Expr(std::vector<Node *>::iterator &cur_iter) : Node(nullptr, EXPR){
+Expr::Expr(std::vector<Node *>::iterator &cur_iter, VarTable& variables) : Node(nullptr, EXPR){
     top = BuildSyntaxTree(cur_iter);
 }
 

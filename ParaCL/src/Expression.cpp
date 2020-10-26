@@ -2,9 +2,9 @@
 #include "../include/LexemHeader.h"
 #include "../include/ExpressionHeader.h"
 
-Node* BuildSyntaxTree (std::vector<Node *>::iterator &cur_iter) {
+Node* BuildSyntaxTree (std::vector<Node *>::iterator &cur_iter, VarTable& variables) {
     Node* tree;
-    tree = Expression (cur_iter);
+    tree = Expression (cur_iter, variables);
 
     /*
     if (end_of_expr != 1) {
@@ -21,11 +21,11 @@ Node* BuildSyntaxTree (std::vector<Node *>::iterator &cur_iter) {
     return tree;
 }
 
-Node* Expression (std::vector<Node *>::iterator &cur_iter) {
+Node* Expression (std::vector<Node *>::iterator &cur_iter, VarTable& variables) {
     Node *e_left;
     BinOp *expression;
 
-    e_left = Multiplication (cur_iter);
+    e_left = Multiplication (cur_iter, variables);
 
     if (e_left != nullptr) {
         Node* cur_lex = *(++cur_iter);
@@ -40,7 +40,7 @@ Node* Expression (std::vector<Node *>::iterator &cur_iter) {
             expression->setLhs (e_left);
             ++cur_iter;
 
-            Node* rhs = Multiplication (cur_iter);
+            Node* rhs = Multiplication (cur_iter, variables);
 
             if (rhs == nullptr) {
                 std::cout << "Wrong format: expected a number or expression\n";
@@ -57,11 +57,11 @@ Node* Expression (std::vector<Node *>::iterator &cur_iter) {
     return e_left;
 }
 
-Node* Multiplication (std::vector<Node *>::iterator &cur_iter) {
+Node* Multiplication (std::vector<Node *>::iterator &cur_iter, VarTable& variables) {
     Node* m_left;
     BinOp* mult;
 
-    m_left = Term (cur_iter);
+    m_left = Term (cur_iter, variables);
 
     if (m_left != nullptr) {
         Node* cur_lex = *(++cur_iter);
@@ -76,7 +76,7 @@ Node* Multiplication (std::vector<Node *>::iterator &cur_iter) {
             mult->setLhs(m_left);
             ++cur_iter;
 
-            Node* rhs = Term (cur_iter);
+            Node* rhs = Term (cur_iter, variables);
 
             if (rhs == nullptr) {
                 std::cout << "Wrong format: expected a number or expression\n";
@@ -93,7 +93,7 @@ Node* Multiplication (std::vector<Node *>::iterator &cur_iter) {
     return m_left;
 }
 
-Node* Term (std::vector<Node *>::iterator &cur_iter) {
+Node* Term (std::vector<Node *>::iterator &cur_iter, VarTable& variables) {
     Node* term = nullptr;
     Node* cur_lex = *cur_iter;
 
@@ -105,12 +105,16 @@ Node* Term (std::vector<Node *>::iterator &cur_iter) {
         return cur_lex;
 
     if (type == VARNAME) {
-
-        //TODO add in unordered map
+        VarName var = *(static_cast<VarName*>(cur_lex));
+        if (variables.find(var.getName()) == variables.end()) {
+            std::cout << "Error: unknown variable [" << var.getName() << "]" << std::endl;
+            return nullptr;
+        }
+        return static_cast<Node*>(&variables[var.getName()]);
     }
 
     if (IsLBrace(cur_lex)) {
-        term = Expression (++cur_iter);
+        term = Expression (++cur_iter, variables);
 
         delete cur_lex;
         cur_lex = *(++cur_iter);
@@ -129,11 +133,13 @@ Node* Term (std::vector<Node *>::iterator &cur_iter) {
     }
 }
 
-int TreeCalculator (Node* top) {
+int TreeCalculator (const Node* top, std::unordered_map<std::string, int>& values) {
     if (top == nullptr) {
         std::cout << "Nothing to calculate\n";
         return 0;
     }
+
+    int result = 0, left = 0, right = 0;
 
     if (top->getType() == NUM) {
         Num num = *((Num*) top);
@@ -141,10 +147,78 @@ int TreeCalculator (Node* top) {
     }
 
     if (top->getType() == BINOP) {
-        BinOp op = *((BinOp*) top);
+        BinOp op = *(static_cast<const BinOp*>(top));
         if (op.getOperation() == ASSIGN) {
-            VarName var = *((VarName*) op.getLhs());
+            VarName var = *(static_cast<const VarName*>(op.getLhs()));
+
+            if (values.find(var.getName()) != values.end()) {
+                return values[var.getName()];
+            }
+
+            if ((op.getRhs())->getType() == FUNC) {
+                Func func = *(static_cast<const Func*>(op.getRhs()));
+                if (func.getFunction() == SCAN) {
+                    std::cout << "Please, input this variable: " << var.getName() << " = ";
+                    std::cin >> result;
+                    values[var.getName()] = result;
+                    return result;
+                }
+            }
+
+            if ((op.getRhs())->getType() == EXPR) {
+                result = TreeCalculator(op.getRhs(), values);
+                values[var.getName()] = result;
+                return result;
+            }
+            std::cout << "Error: unknown operation for ASSIGN\n";
         }
+
+        left = TreeCalculator (op.getLhs(), values);
+        right = TreeCalculator (op.getRhs(), values);
+        switch (op.getOperation()) {
+
+            case ADD:
+                result = left + right;
+                std::cout << left << " + " << right << "   ";
+                break;
+            case SUB:
+                result = left - right;
+                std::cout << left << " - " << right << "   ";
+                break;
+            case MULT:
+                result = left * right;
+                std::cout << left << " * " << right << "   ";
+                break;
+            case DIV:
+                result = left / right;
+                std::cout << left << " / " << right << "   ";
+                break;
+            case ASSIGN:
+                std::cout << "ASSIGN: Oh shit! Here we go again..." << std::endl;
+                break;
+        }
+        return result;
+    }
+
+    std::cout << "Something went wrong while calculating\n";
+    return 0;
+}
+
+void PrintTree (const Node* top) {
+    if (top == nullptr) {
+        std::cout << "Top is nullptr!\n";
+        return;
+    }
+
+    if (top->getType() == BINOP) {
+        BinOp op = *(static_cast<const BinOp*>(top));
+        PrintLexem(top);
+        PrintLexem(op.getLhs());
+        PrintLexem(op.getRhs());
+        std::cout << std::endl;
+
+        PrintTree(op.getLhs());
+        PrintTree(op.getRhs());
     }
 }
 

@@ -3,6 +3,7 @@
 
 void Parser (std::vector<Node*> lexems) {
 
+    VarTable variables;
     for (auto lexem = lexems.begin(); lexem != lexems.end(); ++lexem) {
         Node_t type = (*lexem)->getType();
         if (type == END)

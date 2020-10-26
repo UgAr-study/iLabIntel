@@ -10,7 +10,7 @@ std::string
 GetName (std::vector<char>& text, unsigned& cur_pos);
 
 int GetNumber (std::vector<char>& text, unsigned& cur_pos);
-void PrintLexem (Node lex);
+void PrintLexem (const Node* lex);
 bool IsAddSub (Node* lex);
 
 bool IsMulDiv (Node* lex);
