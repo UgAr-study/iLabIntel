@@ -4,6 +4,7 @@
 #include <utility>
 #include <vector>
 #include <unordered_map>
+#include <sys/stat.h>
 
 enum Node_t     { BINOP, EXPR, FUNC, OPERATOR, VARNAME, BRACE, NUM, END };
 // OPERATOR is {if / while}
@@ -21,7 +22,7 @@ class VarName;
 class Num;
 class Brace;
 
-using VarTable = std::unordered_map<std::string, BinOp>;
+using VarTable = std::unordered_map<std::string, BinOp*>;
 
 
 class Node {
@@ -53,9 +54,12 @@ class Expr: public Node {
     Node* top;
 
 public:
-    Expr();
+    Expr(): Node(nullptr, EXPR) { top = nullptr; };
     Expr(std::vector<Node*>::iterator &cur_iter, VarTable& variables);
-    int Culculate() const;
+    int Culculate(std::unordered_map<std::string, int>& values) const;
+    Node_t getTopType() const { return top->getType(); }
+    void Dump() const;
+    const Node* getTop() const { return top; }
 };
 
 class VarName: public Node {
@@ -70,13 +74,15 @@ public:
 
 class Func: public Node {
     Foo_t func;
+public:
     Expr expression;
 
 public:
     explicit Func(Foo_t type)
-        : func (type), Node(nullptr, FUNC) {};
+        : func (type), Node(nullptr, FUNC), expression() {};
     Foo_t getFunction () const { return func; }
-    Expr getExpression () const {}
+    void setExpr (std::vector<Node*>::iterator &cur_iter, VarTable& variables) { expression = Expr{cur_iter, variables}; };
+    const Expr& getExpression () const { return expression; }
 };
 
 class Num: public Node {

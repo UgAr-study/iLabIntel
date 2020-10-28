@@ -6,7 +6,6 @@ Lexer (std::vector<char>& text) {
     unsigned cur_pos = 0;
     for (; cur_pos < text.size(); ++cur_pos) {
         lexems.push_back(GetLexem(text, cur_pos));
-        ++cur_pos;
     }
     return lexems;
 }
@@ -14,7 +13,8 @@ Lexer (std::vector<char>& text) {
 Node* GetLexem (std::vector<char>& text, unsigned& cur_pos) {
     int flag = 0;
 
-    while (std::isspace(text[cur_pos++]));
+    while (std::isspace(text[cur_pos]))
+        ++cur_pos;
 
     if (IsEnd(text[cur_pos])) {
         auto res = new Node{nullptr, END};
@@ -45,7 +45,7 @@ Node* GetLexem (std::vector<char>& text, unsigned& cur_pos) {
     }
 
 
-    switch (text[cur_pos++]) {
+    switch (text[cur_pos]) {
         case '+': {
             auto res = new BinOp{ADD};
             return res;
@@ -84,7 +84,7 @@ Node* GetLexem (std::vector<char>& text, unsigned& cur_pos) {
 }
 
 bool IsEnd (char c) {
-    if (c == '\0')
+    if (c == '\0' || c == ';')
         return true;
     return false;
 }
@@ -146,7 +146,7 @@ GetName (std::vector<char>& text, unsigned& cur_pos) {
         build_name.push_back(text[cur_pos]);
         ++cur_pos;
     }
-
+    --cur_pos;
     std::string name {build_name.begin(), build_name.end()};
     return name;
 }
@@ -157,6 +157,7 @@ int GetNumber (std::vector<char>& text, unsigned& cur_pos) {
         strnum.push_back(text[cur_pos]);
         ++cur_pos;
     }
+    --cur_pos;
     int res = std::stoi(std::string {strnum.begin(), strnum.end()});
     return res;
 }

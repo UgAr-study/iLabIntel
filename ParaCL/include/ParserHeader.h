@@ -1,4 +1,6 @@
 #pragma once
 #include "MainHeader.h"
 
-void Parser (std::vector<Node*> lexems);
+std::vector<char>
+ReadFile (const char* filename);
+void Parser (std::vector<Node*>& lexems);

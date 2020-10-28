@@ -31,7 +31,8 @@ Node* Expression (std::vector<Node *>::iterator &cur_iter, VarTable& variables) 
         Node* cur_lex = *(++cur_iter);
 
         if (cur_lex->getType() == END) {
-            delete cur_lex;
+            //delete cur_lex;
+            --cur_iter;
             return e_left;
         }
 
@@ -50,7 +51,10 @@ Node* Expression (std::vector<Node *>::iterator &cur_iter, VarTable& variables) 
 
             expression->setRhs (rhs);
             e_left = static_cast<Node*>(expression);
+
             cur_lex = *(++cur_iter);
+            if (!IsAddSub(cur_lex))
+                --cur_iter;
         }
     }
 
@@ -67,7 +71,8 @@ Node* Multiplication (std::vector<Node *>::iterator &cur_iter, VarTable& variabl
         Node* cur_lex = *(++cur_iter);
 
         if (cur_lex->getType() == END) {
-            delete cur_lex;
+            //delete cur_lex;
+            --cur_iter;
             return m_left;
         }
 
@@ -86,7 +91,10 @@ Node* Multiplication (std::vector<Node *>::iterator &cur_iter, VarTable& variabl
 
             mult->setRhs (rhs);
             m_left = static_cast<Node*>(mult);
+
             cur_lex = *(++cur_iter);
+            if (!IsMulDiv(cur_lex))
+                --cur_iter;
         }
     }
 
@@ -110,7 +118,7 @@ Node* Term (std::vector<Node *>::iterator &cur_iter, VarTable& variables) {
             std::cout << "Error: unknown variable [" << var.getName() << "]" << std::endl;
             return nullptr;
         }
-        return static_cast<Node*>(&variables[var.getName()]);
+        return static_cast<Node*>(variables[var.getName()]);
     }
 
     if (IsLBrace(cur_lex)) {
@@ -155,18 +163,20 @@ int TreeCalculator (const Node* top, std::unordered_map<std::string, int>& value
                 return values[var.getName()];
             }
 
-            if ((op.getRhs())->getType() == FUNC) {
-                Func func = *(static_cast<const Func*>(op.getRhs()));
-                if (func.getFunction() == SCAN) {
-                    std::cout << "Please, input this variable: " << var.getName() << " = ";
-                    std::cin >> result;
-                    values[var.getName()] = result;
-                    return result;
-                }
-            }
+
 
             if ((op.getRhs())->getType() == EXPR) {
-                result = TreeCalculator(op.getRhs(), values);
+                const Expr expr = *(static_cast<const Expr*>(op.getRhs()));
+                if (expr.getTopType() == FUNC) {
+                    Func func = *(static_cast<const Func*>(op.getRhs()));
+                    if (func.getFunction() == SCAN) {
+                        std::cout << "Please, input this variable: " << var.getName() << " = ";
+                        std::cin >> result;
+                        values[var.getName()] = result;
+                        return result;
+                    }
+                }
+                result = TreeCalculator(expr.getTop(), values);
                 values[var.getName()] = result;
                 return result;
             }
@@ -213,9 +223,11 @@ void PrintTree (const Node* top) {
     if (top->getType() == BINOP) {
         BinOp op = *(static_cast<const BinOp*>(top));
         PrintLexem(top);
-        PrintLexem(op.getLhs());
-        PrintLexem(op.getRhs());
         std::cout << std::endl;
+        PrintLexem(op.getLhs());
+        std::cout << std::endl;
+        PrintLexem(op.getRhs());
+        std::cout << std::endl << std::endl;
 
         PrintTree(op.getLhs());
         PrintTree(op.getRhs());

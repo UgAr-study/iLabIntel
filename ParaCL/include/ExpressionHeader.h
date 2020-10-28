@@ -8,3 +8,4 @@ Node* Multiplication  (std::vector<Node *>::iterator &cur_iter, VarTable& variab
 Node* Term            (std::vector<Node *>::iterator &cur_iter, VarTable& variables);
 
 int TreeCalculator (const Node* top, std::unordered_map<std::string, int>& values);
+void PrintTree (const Node* top);
