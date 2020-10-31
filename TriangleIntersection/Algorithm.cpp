@@ -19,7 +19,7 @@ void Alg::Cube::CheckEveryTriangleInCube (res_table& ans_table) const {
 
 void Alg::Cube::CheckThisTriangle(Geom::Triangle *triangle, res_table& ans_table) const {
     for (auto& i: triangles)
-        if (triangle->IsIntersectWithOther(*i)) {
+        if ((i->number != triangle->number) && triangle->IsIntersectWithOther(*i)) {
             ans_table[i] = *i;
             ans_table[triangle] = *triangle;
         }
@@ -246,7 +246,8 @@ bool Alg::DefineCube(const Alg::triangle_vec& triangles, Geom::Point *dots) {
     if (triangles.empty())
         return false;
 
-    float min_x = 0, max_x = 0, min_y = 0, max_y = 0, min_z = 0, max_z = 0;
+    Geom::Triangle ref_tr = triangles[0];
+    float min_x = ref_tr.A1.x, max_x = ref_tr.A1.x, min_y = ref_tr.A1.y, max_y = ref_tr.A1.y, min_z = ref_tr.A1.z, max_z = ref_tr.A1.z;
     for (auto tr: triangles) {
         Geom::Point points[3] {tr.A1, tr.A2, tr.A3};
         for (auto p: points) {

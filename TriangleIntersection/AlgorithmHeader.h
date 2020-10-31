@@ -33,7 +33,6 @@ namespace Alg {
         explicit Cube(Geom::Point leftBot, Geom::Point rightTop ,
                       triangles_ptr& triangle, special_trs & spec_trs, Cube* parent);
         signed char IsTriangleInCube (Geom::Triangle triangle) const;
-        bool IsOverlapWithInterval (Geom::Interval interval) const;
         void CheckEveryTriangleInCube (res_table& ans_table) const;
         void CheckThisTriangle (Geom::Triangle *triangle, res_table& ans_table) const;
         Cube* CubeFraction (special_trs& spec_trs);

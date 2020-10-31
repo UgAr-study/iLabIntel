@@ -17,3 +17,4 @@ std::unordered_map<unsigned, std::vector<unsigned>>
 GetAnswer (std::vector<Geom::Triangle> &trs);
 
 void DumpAnswer (std::unordered_map<unsigned, std::vector<unsigned>>& ans_table);
+void DumpIntersectionsWithTriangle (Geom::Triangle tr, std::vector<Geom::Triangle> &trs);

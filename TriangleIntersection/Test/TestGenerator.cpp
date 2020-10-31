@@ -57,6 +57,13 @@ void DumpAnswer (std::unordered_map<unsigned, std::vector<unsigned>>& ans_table)
     }
 }
 
+void DumpIntersectionsWithTriangle (Geom::Triangle tr, std::vector<Geom::Triangle> &trs) {
+    std::cout << "Triangle №" << tr.number << ":\n";
+    for (auto& i: trs)
+        if (tr.IsIntersectWithOther(i))
+            std::cout << i.number << std::endl;
+}
+
 /*
 int main () {
 

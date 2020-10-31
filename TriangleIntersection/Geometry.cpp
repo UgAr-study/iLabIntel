@@ -91,6 +91,11 @@ bool Geom::Vector::IsPerpendicularToOther(Vector other) const {
     return false;
 }
 
+Geom::Vector Geom::Vector::Normalize() const {
+    Vector v {Point{0, 0, 0}, V / Abs()};
+    return v;
+}
+
 //////////////////////
 ///////Interval///////
 //////////////////////
@@ -106,6 +111,9 @@ bool Geom::Interval::IsPointBelongsToInterval(Point M) const {
 }
 
 bool Geom::Interval::IsOverlapWithOther(Interval other) const {
+    if (!other.isValid() || !isValid())
+        return false;
+
     Vector v1 {C1, C2},
            v2 {other.C1, other.C2};
     if (!v1.IsCollinearToOther(v2))
@@ -158,16 +166,16 @@ Geom::Point Geom::Line::IntersectionWithOtherLine(Geom::Line other, bool *isCoin
 ///////Triangle///////
 //////////////////////
 
-void Geom::Triangle::dump(std::ostream &os) const {
+void Geom::Triangle::Dump(std::ostream &os) const {
     bool valid = isValid();
     os << "Triangle № " << number << " [valid = " << valid << "]"
-        << "\n\tA1 (" << A1.x << ", " << A1.y << ", " << A1.z << ")\n"
-        << "\tA2 (" << A2.x << ", " << A2.y << ", " << A2.z << ")\n"
-        << "\tA3 (" << A3.x << ", " << A3.y << ", " << A3.z << ")\n";
+        << "\n\t" << A1.x << " " << A1.y << " " << A1.z << "\n"
+        << "\t" << A2.x << " " << A2.y << " " << A2.z << "\n"
+        << "\t" << A3.x << " " << A3.y << " " << A3.z << "\n";
 }
 
-std::ostream& Geom::operator << (std::ostream &os, Triangle& tr) {
-    tr.dump(os);
+std::ostream& operator << (std::ostream &os, Geom::Triangle& tr) {
+    tr.Dump(os);
     return os;
 }
 
@@ -277,6 +285,15 @@ Geom::Plane::Plane(Point A1, Point A2, Point A3) {
     C = Determinant(A3.x - A1.x, A3.y - A1.y,
                     A2.x - A1.x, A2.y - A1.y);
     D = -A1.x * A - A1.y * B - A1.z * C;
+
+    Point p{A, B, C}, p0{0, 0, 0};
+    Vector v{p0, p};
+    Vector normal_v = v.Normalize();
+    A = normal_v.V.x;
+    B = normal_v.V.y;
+    C = normal_v.V.z;
+    D = D / v.Abs();
+
 }
 
 Geom::Line Geom::Plane::IntersectionWithOtherPlane(Plane other) const {
@@ -320,6 +337,16 @@ Geom::Point Geom::Plane::IntersectionWithLine(Geom::Line line) const {
     Point p = line.vec.V * t;
     Point res = line.M + p;
     return res;
+}
+
+void Geom::Plane::Dump(std::ostream &os) const {
+    os << "Plane: valid = " << isValid() << std::endl
+        << "\tA: " << A << "\n\tB: " << B << "\n\tC: " << C << std::endl;
+}
+
+std::ostream& operator << (std::ostream &os, Geom::Plane& plane) {
+    plane.Dump(os);
+    return os;
 }
 
 

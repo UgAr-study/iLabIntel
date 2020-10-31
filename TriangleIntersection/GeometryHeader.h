@@ -7,7 +7,7 @@
 
 namespace Geom {
 
-    static float PRECISION = 1e-5;
+    static float PRECISION = 1e-4;
 
     struct Solution;
     struct Point;
@@ -19,7 +19,7 @@ namespace Geom {
 
     struct Solution {
         float x1 = NAN, x2 = NAN;
-        bool isValid() const { return (x1 != NAN && x2 != NAN); }
+        bool isValid() const { return (!isnanf(x1) && !isnanf(x2)); }
     };
 
     struct Point {
@@ -58,12 +58,14 @@ namespace Geom {
         Vector VectorMult(Vector second_vec) const;
         float ScalarMult (Vector second_vec) const;
         float Abs() const { return V.Abs(); }
+        Vector Normalize() const;
     };
 
     struct Interval {
         Point C1, C2;
         Interval() = default;
         explicit Interval (Point C1_, Point C2_) { C1 = C1_; C2 = C2_; }
+        bool isValid() const { return (C1.isValid() && C2.isValid()); }
         bool IsPointBelongsToInterval (Point M) const;
         bool IsIntersectWithOther (Interval other) const;
         bool IsOverlapWithOther (Interval other) const;
@@ -102,7 +104,7 @@ namespace Geom {
         bool IsIntersectWithOther(Triangle other) const;
         bool IsIntersectThePlane (Plane plane) const;
         Interval IntersectWithLine (Line line) const;
-        void dump (std::ostream& os) const;
+        void Dump (std::ostream& os) const;
     };
 
 
@@ -110,10 +112,12 @@ namespace Geom {
         float A = NAN, B = NAN, C = NAN, D = NAN;
 
         Plane(Point A1, Point A2, Point A3);
+        explicit Plane(Triangle tr): Plane(tr.A1, tr.A2, tr.A3) {}
         bool isValid() const { return !(isnanf(A) || isnanf(B) || isnanf(C) || isnanf(D)); }
         Line IntersectionWithOtherPlane(Plane other) const;
         Point IntersectionWithLine (Line line) const;
         bool IsEqualToOtherPlane (Plane other) const;
+        void Dump (std::ostream &os) const;
     };
 
     float Determinant(float a11, float a12,
@@ -122,5 +126,6 @@ namespace Geom {
     Solution SolveTwoEquations (float a11, float a12, float b1,
                              float a21, float a22, float b2);
 
-    std::ostream& operator << (std::ostream &os, Triangle& tr);
 }
+std::ostream& operator << (std::ostream &os, Geom::Triangle& tr);
+std::ostream& operator << (std::ostream &os, Geom::Plane& plane);
