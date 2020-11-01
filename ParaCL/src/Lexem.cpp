@@ -17,7 +17,7 @@ Node* GetLexem (std::vector<char>& text, unsigned& cur_pos) {
         ++cur_pos;
 
     if (IsEnd(text[cur_pos])) {
-        auto res = new Node{nullptr, END};
+        auto res = new End{};
         return res;
     }
 
@@ -27,16 +27,16 @@ Node* GetLexem (std::vector<char>& text, unsigned& cur_pos) {
             auto res = new Func{PRINT};
             return res;
         } else if (name == "if") {
-            //TODO
+            auto res = new Branch_Operator{IF};
+            return res;
         } else if (name == "while") {
-            //TODO
+            auto res = new Branch_Operator{WHILE};
+            return res;
         } else {
             auto res = new VarName{name};
             return res;
         }
     }
-
-    //while (std::isspace(text[cur_pos++]));
 
     if (std::isdigit(text[cur_pos])) {
         int num = GetNumber (text, cur_pos);
@@ -63,15 +63,75 @@ Node* GetLexem (std::vector<char>& text, unsigned& cur_pos) {
             return res;
         }
         case '=': {
+
+            while (std::isspace(text[cur_pos + 1]))
+                ++cur_pos;
+
+            if (text[cur_pos + 1] == '=') {
+                auto res = new BinOp{EQUAL};
+                cur_pos++;
+                return res;
+            }
+
             auto res = new BinOp{ASSIGN};
             return res;
         }
+
+        case '<': {
+            while (std::isspace(text[cur_pos + 1]))
+                ++cur_pos;
+
+            if (text[cur_pos + 1] == '=') {
+                auto res = new BinOp{LESSEQUAL};
+                cur_pos++;
+                return res;
+            }
+
+            auto res = new BinOp{LESS};
+            return res;
+        }
+
+        case '>': {
+            while (std::isspace(text[cur_pos + 1]))
+                ++cur_pos;
+
+            if (text[cur_pos + 1] == '=') {
+                auto res = new BinOp{OVEREQUAL};
+                cur_pos++;
+                return res;
+            }
+
+            auto res = new BinOp{OVER};
+            return res;
+        }
+
+        case '!': {
+            while (std::isspace(text[cur_pos + 1]))
+                ++cur_pos;
+
+            if (text[cur_pos + 1] == '=') {
+                auto res = new BinOp{NOTEQUAL};
+                cur_pos++;
+                return res;
+            }
+
+            Node* res = nullptr;
+            return res;
+        }
         case '(': {
-            auto res = new Brace{LBRACE};
+            auto res = new Brace{LROUNDBRACK};
             return res;
         }
         case ')': {
-            auto res = new Brace{RBRACE};
+            auto res = new Brace{RROUNDBRACK};
+            return res;
+        }
+        case '{': {
+            auto res = new Brace{OPENBRACE};
+            return res;
+        }
+        case '}': {
+            auto res = new Brace{CLOSEBRACE};
             return res;
         }
         case '?': {
@@ -110,6 +170,7 @@ bool IsMulDiv (Node* lex) {
         BinOp_t type = op.getOperation();
         if (type == MULT || type == DIV)
             return true;
+
     }
 
     //TODO do I need to decrement cur_pos?
@@ -121,7 +182,7 @@ bool IsLBrace (Node* lex) {
         return false;
     if (lex->getType() == BRACE) {
         Brace brace = *((Brace*) lex);
-        if (brace.getBraceType() == LBRACE)
+        if (brace.getBraceType() == LROUNDBRACK)
             return true;
     }
     return false;
@@ -132,17 +193,24 @@ bool IsRBrace (Node* lex) {
         return false;
     if (lex->getType() == BRACE) {
         Brace brace = *((Brace*) lex);
-        if (brace.getBraceType() == RBRACE)
+        if (brace.getBraceType() == RROUNDBRACK)
             return true;
     }
     return false;
 }
 
+bool IsCorrectSymbolForVarName (char c) {
+    if (std::isalpha(c) || std::isdigit(c) || c == '_' || c == '-')
+        return true;
+    return false;
+}
+
+
 std::string
 GetName (std::vector<char>& text, unsigned& cur_pos) {
     std::vector<char> build_name;
 
-    while (std::isalpha(text[cur_pos])) {
+    while (IsCorrectSymbolForVarName(text[cur_pos])) {
         build_name.push_back(text[cur_pos]);
         ++cur_pos;
     }
@@ -162,7 +230,16 @@ int GetNumber (std::vector<char>& text, unsigned& cur_pos) {
     return res;
 }
 
-void PrintLexem (const Node* lex) {
+void Indents (int n) {
+    while (n > 0) {
+        std::cout << "  ";
+        n--;
+    }
+}
+
+void PrintLexem (const Node* lex, int n_tabs) {
+    Indents(n_tabs);
+
     switch (lex->getType()) {
 
         case BINOP: {
@@ -205,8 +282,8 @@ void PrintLexem (const Node* lex) {
 
             break;
         }
-        case OPERATOR:
-            std::cout << "Operator: don't know yet :(";
+        case BRANCHOPERATOR:
+            std::cout << "Branch_Operator: don't know yet :(";
             break;
         case VARNAME: {
             VarName var = *((VarName*) lex);
@@ -217,11 +294,11 @@ void PrintLexem (const Node* lex) {
             Brace brace = *((Brace*) lex);
 
             switch (brace.getBraceType()) {
-                case LBRACE:
-                    std::cout << "Brace: LBRACE";
+                case LROUNDBRACK:
+                    std::cout << "Brace: LROUNDBRACK";
                     break;
-                case RBRACE:
-                    std::cout << "Brace: RBRACE";
+                case RROUNDBRACK:
+                    std::cout << "Brace: RROUNDBRACK";
                     break;
             }
 
@@ -236,4 +313,6 @@ void PrintLexem (const Node* lex) {
             std::cout << "End";
             break;
     }
+
+    std::cout << std::endl;
 }

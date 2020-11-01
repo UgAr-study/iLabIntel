@@ -46,7 +46,11 @@ Geom::Point Geom::Point::operator*(float a) const {
 //////////////////////
 
 bool Geom::Vector::IsCollinearToOther(Vector other) const {
-    if (VectorMult(other).IsZero())
+    /*Vector v_this = Normalize();
+    Vector v_other = other.Normalize();
+    if ((v_this.VectorMult(v_other)).IsZero())
+        return true;*/
+    if ((VectorMult(other)).IsZero())
         return true;
     return false;
 }

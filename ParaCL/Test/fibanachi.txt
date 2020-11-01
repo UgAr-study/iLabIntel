@@ -1,0 +1,24 @@
+a = ?;
+
+if (a > 2) {
+    x = 1;
+    y = 1;
+    ans = 0;
+
+    i = a;
+    while (i > 2)
+    {
+        ans = x + y;
+        x = y;
+        y = ans;
+        i = i - 1;
+    }
+
+    print ans;
+}
+
+if (a <= 2) {
+    print 1;
+    a = 0;
+}
+

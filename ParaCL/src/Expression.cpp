@@ -2,16 +2,9 @@
 #include "../include/LexemHeader.h"
 #include "../include/ExpressionHeader.h"
 
-Node* BuildSyntaxTree (std::vector<Node *>::iterator &cur_iter, VarTable& variables) {
+Node* BuildSyntaxTree (std::vector<Node *>::iterator &cur_iter, VarValues& values /*, VarTable& variables*/) {
     Node* tree;
-    tree = Expression (cur_iter, variables);
-
-    /*
-    if (end_of_expr != 1) {
-        printf ("Not reach end of expression! Check braces\n");
-        exit(0);
-    }
-     */
+    tree = Expression (cur_iter, values/*, variables*/);
 
     if (tree == nullptr) {
         printf ("Nothing to be calculated\n");
@@ -21,87 +14,90 @@ Node* BuildSyntaxTree (std::vector<Node *>::iterator &cur_iter, VarTable& variab
     return tree;
 }
 
-Node* Expression (std::vector<Node *>::iterator &cur_iter, VarTable& variables) {
+Node* Expression (std::vector<Node *>::iterator &cur_iter, VarValues& values) {
     Node *e_left;
     BinOp *expression;
 
-    e_left = Multiplication (cur_iter, variables);
+    e_left = Multiplication (cur_iter, values);
 
     if (e_left != nullptr) {
         Node* cur_lex = *(++cur_iter);
 
         if (cur_lex->getType() == END) {
-            //delete cur_lex;
             --cur_iter;
             return e_left;
         }
 
-        while (IsAddSub(cur_lex)) {
-            expression = static_cast<BinOp*>(cur_lex);
-            expression->setLhs (e_left);
-            ++cur_iter;
+        if (IsAddSub(cur_lex)) {
 
-            Node* rhs = Multiplication (cur_iter, variables);
+            while (IsAddSub(cur_lex)) {
+                expression = static_cast<BinOp *>(cur_lex);
+                expression->setLhs(e_left);
+                ++cur_iter;
 
-            if (rhs == nullptr) {
-                std::cout << "Wrong format: expected a number or expression\n";
-                delete expression;
-                return nullptr;
+                Node *rhs = Multiplication(cur_iter, values);
+
+                if (rhs == nullptr) {
+                    std::cout << "Wrong format: expected a number or expression\n";
+                    delete expression;
+                    return nullptr;
+                }
+
+                expression->setRhs(rhs);
+                e_left = static_cast<Node *>(expression);
+
+                cur_lex = *(++cur_iter);
             }
-
-            expression->setRhs (rhs);
-            e_left = static_cast<Node*>(expression);
-
-            cur_lex = *(++cur_iter);
-            if (!IsAddSub(cur_lex))
-                --cur_iter;
         }
+        --cur_iter;
     }
 
     return e_left;
 }
 
-Node* Multiplication (std::vector<Node *>::iterator &cur_iter, VarTable& variables) {
+Node* Multiplication (std::vector<Node *>::iterator &cur_iter, VarValues& values) {
     Node* m_left;
     BinOp* mult;
 
-    m_left = Term (cur_iter, variables);
+    m_left = Term (cur_iter, values);
 
     if (m_left != nullptr) {
         Node* cur_lex = *(++cur_iter);
 
         if (cur_lex->getType() == END) {
-            //delete cur_lex;
             --cur_iter;
             return m_left;
         }
 
-        while (IsMulDiv(cur_lex)) {
-            mult = static_cast<BinOp*>(cur_lex);
-            mult->setLhs(m_left);
-            ++cur_iter;
+        if (IsMulDiv(cur_lex)) {
 
-            Node* rhs = Term (cur_iter, variables);
+            while (IsMulDiv(cur_lex)) {
+                mult = static_cast<BinOp *>(cur_lex);
+                mult->setLhs(m_left);
+                ++cur_iter;
 
-            if (rhs == nullptr) {
-                std::cout << "Wrong format: expected a number or expression\n";
-                delete mult;
-                return nullptr;
+                Node *rhs = Term(cur_iter, values);
+
+                if (rhs == nullptr) {
+                    std::cout << "Wrong format: expected a number or expression\n";
+                    delete mult;
+                    return nullptr;
+                }
+
+                mult->setRhs(rhs);
+                m_left = static_cast<Node *>(mult);
+
+                cur_lex = *(++cur_iter);
             }
-
-            mult->setRhs (rhs);
-            m_left = static_cast<Node*>(mult);
-
-            cur_lex = *(++cur_iter);
-            if (!IsMulDiv(cur_lex))
-                --cur_iter;
         }
+
+        --cur_iter;
     }
 
     return m_left;
 }
 
-Node* Term (std::vector<Node *>::iterator &cur_iter, VarTable& variables) {
+Node* Term (std::vector<Node *>::iterator &cur_iter, VarValues& values) {
     Node* term = nullptr;
     Node* cur_lex = *cur_iter;
 
@@ -114,23 +110,21 @@ Node* Term (std::vector<Node *>::iterator &cur_iter, VarTable& variables) {
 
     if (type == VARNAME) {
         VarName var = *(static_cast<VarName*>(cur_lex));
-        if (variables.find(var.getName()) == variables.end()) {
+        if (values.find(var.getName()) == values.end()) {
             std::cout << "Error: unknown variable [" << var.getName() << "]" << std::endl;
             return nullptr;
         }
-        return static_cast<Node*>(variables[var.getName()]);
+        return cur_lex;
+        //return static_cast<Node*>(values[var.getName()]);
     }
 
     if (IsLBrace(cur_lex)) {
-        term = Expression (++cur_iter, variables);
+        term = Expression (++cur_iter, values);
 
-        delete cur_lex;
         cur_lex = *(++cur_iter);
 
         if (!IsRBrace(cur_lex)) {
             std::cout << "Wrong format: expected ')'\n";
-            delete term;
-            delete cur_lex;
             return nullptr;
         }
 
@@ -141,7 +135,7 @@ Node* Term (std::vector<Node *>::iterator &cur_iter, VarTable& variables) {
     }
 }
 
-int TreeCalculator (const Node* top, std::unordered_map<std::string, int>& values) {
+int TreeCalculator (const Node* top, VarValues & values) {
     if (top == nullptr) {
         std::cout << "Nothing to calculate\n";
         return 0;
@@ -150,9 +144,35 @@ int TreeCalculator (const Node* top, std::unordered_map<std::string, int>& value
     int result = 0, left = 0, right = 0;
 
     if (top->getType() == NUM) {
-        Num num = *((Num*) top);
+        Num num = *(static_cast<const Num*>(top));
         return num.getNum();
     }
+
+    if (top->getType() == VARNAME) {
+        VarName var = *(static_cast<const VarName*>(top));
+
+        if (values.find(var.getName()) == values.end()) {
+            std::cout << "Error: unknown variable: " << var.getName() << std::endl;
+            return 0;
+        }
+
+        return values[var.getName()]->getNum();
+    }
+
+    if (top->getType() == FUNC) {
+        Func func = *(static_cast<const Func*>(top));
+
+        if (func.getFunction() == SCAN) {
+            std::cout << "Please, input this variable: ";
+            std::cin >> result;
+            return result;
+        }
+        else {
+            std::cout << "Error: unknow function for variable" << std::endl;
+            return 0;
+        }
+    }
+
 
     if (top->getType() == BINOP) {
         BinOp op = *(static_cast<const BinOp*>(top));
@@ -160,10 +180,8 @@ int TreeCalculator (const Node* top, std::unordered_map<std::string, int>& value
             VarName var = *(static_cast<const VarName*>(op.getLhs()));
 
             if (values.find(var.getName()) != values.end()) {
-                return values[var.getName()];
+                return values[var.getName()]->getNum();
             }
-
-
 
             if ((op.getRhs())->getType() == EXPR) {
                 const Expr expr = *(static_cast<const Expr*>(op.getRhs()));
@@ -172,12 +190,12 @@ int TreeCalculator (const Node* top, std::unordered_map<std::string, int>& value
                     if (func.getFunction() == SCAN) {
                         std::cout << "Please, input this variable: " << var.getName() << " = ";
                         std::cin >> result;
-                        values[var.getName()] = result;
+                        values[var.getName()] = new Num{result};
                         return result;
                     }
                 }
                 result = TreeCalculator(expr.getTop(), values);
-                values[var.getName()] = result;
+                values[var.getName()] = new Num{result};
                 return result;
             }
             std::cout << "Error: unknown operation for ASSIGN\n";
@@ -189,19 +207,27 @@ int TreeCalculator (const Node* top, std::unordered_map<std::string, int>& value
 
             case ADD:
                 result = left + right;
+                #ifdef DEBUG
                 std::cout << left << " + " << right << "   ";
+                #endif
                 break;
             case SUB:
                 result = left - right;
+                #ifdef DEBUG
                 std::cout << left << " - " << right << "   ";
+                #endif
                 break;
             case MULT:
                 result = left * right;
+                #ifdef DEBUG
                 std::cout << left << " * " << right << "   ";
+                #endif
                 break;
             case DIV:
                 result = left / right;
+                #ifdef DEBUG
                 std::cout << left << " / " << right << "   ";
+                #endif
                 break;
             case ASSIGN:
                 std::cout << "ASSIGN: Oh shit! Here we go again..." << std::endl;
@@ -214,7 +240,10 @@ int TreeCalculator (const Node* top, std::unordered_map<std::string, int>& value
     return 0;
 }
 
-void PrintTree (const Node* top) {
+void PrintTree (const Node* top, int n_tabs) {
+
+    Indents(n_tabs);
+
     if (top == nullptr) {
         std::cout << "Top is nullptr!\n";
         return;
@@ -222,15 +251,48 @@ void PrintTree (const Node* top) {
 
     if (top->getType() == BINOP) {
         BinOp op = *(static_cast<const BinOp*>(top));
-        PrintLexem(top);
-        std::cout << std::endl;
-        PrintLexem(op.getLhs());
-        std::cout << std::endl;
-        PrintLexem(op.getRhs());
+        PrintLexem(top, n_tabs);
+
+        PrintLexem(op.getLhs(), n_tabs);
+        PrintLexem(op.getRhs(), n_tabs);
         std::cout << std::endl << std::endl;
 
-        PrintTree(op.getLhs());
-        PrintTree(op.getRhs());
+        Indents(n_tabs);
+        std::cout << "Left:" << std::endl;
+        PrintTree(op.getLhs(), n_tabs + 1);
+
+        Indents(n_tabs);
+        std::cout << "Right:" << std::endl;
+        PrintTree(op.getRhs(), n_tabs + 1);
+
+        return;
     }
+
+    if (top->getType() == EXPR) {
+        Expr expr = *(static_cast<const Expr*>(top));
+        PrintLexem(top, n_tabs);
+        PrintTree(expr.getTop(), n_tabs + 1);
+        return;
+    }
+
+    PrintLexem(top, n_tabs);
+    std::cout << std::endl;
 }
+
+/*
+void RecursiveDelete(const Node* top) {
+
+    if (top->getType() == BINOP) {
+        BinOp b_op = *(static_cast<const BinOp*>(top));
+
+        if (b_op.getLhs() != nullptr)
+            RecursiveDelete(b_op.getLhs());
+
+        if (b_op.getRhs() != nullptr)
+            RecursiveDelete(b_op.getRhs());
+    }
+
+
+
+}*/
 
