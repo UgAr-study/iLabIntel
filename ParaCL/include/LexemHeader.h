@@ -13,9 +13,9 @@ GetName (std::vector<char>& text, unsigned& cur_pos);
 int GetNumber (std::vector<char>& text, unsigned& cur_pos);
 void Indents(int n);
 void PrintLexem (const Node* lex, int n_tabs);
-bool IsAddSub (Node* lex);
 
-bool IsMulDiv (Node* lex);
-bool IsLBrace (Node* lex);
-bool IsRBrace (Node* lex);
+bool IsAddSub (const Node* lex);
+bool IsMulDiv (const Node* lex);
+bool IsLBrace (const Node* lex);
+bool IsRBrace (const Node* lex);
 bool IsEnd (char c);

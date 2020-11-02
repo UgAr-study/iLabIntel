@@ -1,0 +1,17 @@
+a = ?;
+b = 0;
+while (a > 0) {
+    while (b < a) {
+        if (((b / 2) * 2) != b) {
+            print 1;
+        }
+        if (((b / 2) * 2) == b) {
+            print 0;
+        }
+        b = b + 1;
+    }
+    b = 0;
+    a = a - 1;
+}
+
+print a;

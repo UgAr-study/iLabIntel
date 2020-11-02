@@ -3,4 +3,4 @@
 
 std::vector<char>
 ReadFile (const char* filename);
-void Parser (std::vector<Node*>& lexems, VarValues * GlobalValues);
+void Parser (std::vector<Node*>::iterator begin, std::vector<Node*>::iterator end, VarValues* GlobalValues);

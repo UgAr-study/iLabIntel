@@ -109,13 +109,12 @@ Node* Term (std::vector<Node *>::iterator &cur_iter, VarValues& values) {
         return cur_lex;
 
     if (type == VARNAME) {
-        VarName var = *(static_cast<VarName*>(cur_lex));
-        if (values.find(var.getName()) == values.end()) {
-            std::cout << "Error: unknown variable [" << var.getName() << "]" << std::endl;
+        auto var = static_cast<VarName*>(cur_lex);
+        if (values.find(var->getName()) == values.end()) {
+            std::cout << "Error: unknown variable [" << var->getName() << "]" << std::endl;
             return nullptr;
         }
         return cur_lex;
-        //return static_cast<Node*>(values[var.getName()]);
     }
 
     if (IsLBrace(cur_lex)) {
@@ -144,25 +143,25 @@ int TreeCalculator (const Node* top, VarValues & values) {
     int result = 0, left = 0, right = 0;
 
     if (top->getType() == NUM) {
-        Num num = *(static_cast<const Num*>(top));
-        return num.getNum();
+        const Num *num = static_cast<const Num*>(top);
+        return num->getNum();
     }
 
     if (top->getType() == VARNAME) {
-        VarName var = *(static_cast<const VarName*>(top));
+        const VarName *var = static_cast<const VarName*>(top);
 
-        if (values.find(var.getName()) == values.end()) {
-            std::cout << "Error: unknown variable: " << var.getName() << std::endl;
+        if (values.find(var->getName()) == values.end()) {
+            std::cout << "Error: unknown variable: " << var->getName() << std::endl;
             return 0;
         }
 
-        return values[var.getName()]->getNum();
+        return values[var->getName()]->getNum();
     }
 
     if (top->getType() == FUNC) {
-        Func func = *(static_cast<const Func*>(top));
+        auto func = static_cast<const Func*>(top);
 
-        if (func.getFunction() == SCAN) {
+        if (func->getFunction() == SCAN) {
             std::cout << "Please, input this variable: ";
             std::cin >> result;
             return result;
@@ -175,35 +174,35 @@ int TreeCalculator (const Node* top, VarValues & values) {
 
 
     if (top->getType() == BINOP) {
-        BinOp op = *(static_cast<const BinOp*>(top));
-        if (op.getOperation() == ASSIGN) {
-            VarName var = *(static_cast<const VarName*>(op.getLhs()));
+        const BinOp *op = static_cast<const BinOp*>(top);
+        if (op->getOperation() == ASSIGN) {
+            const VarName *var = static_cast<const VarName*>(op->getLhs());
 
-            if (values.find(var.getName()) != values.end()) {
-                return values[var.getName()]->getNum();
+            if (values.find(var->getName()) != values.end()) {
+                return values[var->getName()]->getNum();
             }
 
-            if ((op.getRhs())->getType() == EXPR) {
-                const Expr expr = *(static_cast<const Expr*>(op.getRhs()));
-                if (expr.getTopType() == FUNC) {
-                    Func func = *(static_cast<const Func*>(op.getRhs()));
-                    if (func.getFunction() == SCAN) {
-                        std::cout << "Please, input this variable: " << var.getName() << " = ";
+            if ((op->getRhs())->getType() == EXPR) {
+                const Expr *expr = static_cast<const Expr*>(op->getRhs());
+                if (expr->getTopType() == FUNC) {
+                    const Func *func = static_cast<const Func*>(op->getRhs());
+                    if (func->getFunction() == SCAN) {
+                        std::cout << "Please, input this variable: " << var->getName() << " = ";
                         std::cin >> result;
-                        values[var.getName()] = new Num{result};
+                        values[var->getName()] = new Num{result};
                         return result;
                     }
                 }
-                result = TreeCalculator(expr.getTop(), values);
-                values[var.getName()] = new Num{result};
+                result = TreeCalculator(expr->getTop(), values);
+                values[var->getName()] = new Num{result};
                 return result;
             }
             std::cout << "Error: unknown operation for ASSIGN\n";
         }
 
-        left = TreeCalculator (op.getLhs(), values);
-        right = TreeCalculator (op.getRhs(), values);
-        switch (op.getOperation()) {
+        left = TreeCalculator (op->getLhs(), values);
+        right = TreeCalculator (op->getRhs(), values);
+        switch (op->getOperation()) {
 
             case ADD:
                 result = left + right;

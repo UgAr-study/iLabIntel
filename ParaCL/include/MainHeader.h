@@ -35,13 +35,13 @@ public:
     Node (Node_t type_)
         : type (type_) {};
     Node_t getType () const { return type; }
-    //virtual ~Node() = 0;
+    virtual ~Node() = 0;
 };
 
 class End: public Node {
 public:
     End(): Node(END) {}
-    //~End() override = default;
+    ~End() override = default;
 };
 
 class BinOp: public Node {
@@ -60,7 +60,7 @@ public:
     const Node* getRhs() const { return rhs; }
     bool isCompare() const;
 
-    //~BinOp() override { delete lhs; delete rhs; }
+    ~BinOp() override { delete lhs; delete rhs; }
 };
 
 class Expr: public Node {
@@ -74,7 +74,7 @@ public:
     void Dump() const;
     const Node* getTop() const { return top; }
 
-    //~Expr() override { delete top; }
+    ~Expr() override { delete top; }
 };
 
 class VarName: public Node {
@@ -85,23 +85,23 @@ public:
         : Node(VARNAME), name(std::move(name_)) {};
     std::string getName () const { return name; }
 
-    //~VarName() override = default;
+    ~VarName() override = default;
 };
 
 
 class Func: public Node {
     Foo_t func;
 public:
-    Expr expression;
+    Expr *expression;
 
 public:
     explicit Func(Foo_t type)
-        : func (type), Node(FUNC), expression() {};
+        : func (type), Node(FUNC) {};
     Foo_t getFunction () const { return func; }
-    void setExpr (std::vector<Node*>::iterator &cur_iter, VarValues &values) { expression = Expr{cur_iter, values/*, variables*/}; };
-    const Expr& getExpression () const { return expression; }
-
-    //~Func() override = default;
+    void setExpr (std::vector<Node*>::iterator &cur_iter, VarValues &values) { expression = new Expr{cur_iter, values}; };
+    const Expr getExpression () const { return *expression; }
+    int CulcExpression(VarValues & values) { return expression->Culculate(values); }
+    ~Func() override { delete expression; };
 };
 
 class Num: public Node {
@@ -112,7 +112,7 @@ public:
         : num (number), Node(NUM) {};
     int getNum () const { return num; }
 
-    //~Num() override = default;
+    ~Num() override = default;
 };
 
 class Brace: public Node {
@@ -123,7 +123,7 @@ public:
         : brace_type(type), Node(BRACE) {};
     Braces_t getBraceType () const { return brace_type; }
 
-    //~Brace() override = default;
+    ~Brace() override = default;
 };
 
 class Condition {
@@ -133,17 +133,22 @@ public:
     bool isTrue(VarValues& GlobalValues) const;
     bool isValid() { return b_op != nullptr; }
 
-    //~Condition() { delete b_op; } // TODO: may be i delete useful information
+    ~Condition() = default; // TODO: may be i delete useful information
 };
 
 class Scope {
-    std::vector<Node*> scope_code;
+    bool valid = false;
+    std::vector<Node*>::iterator begin;
+    std::vector<Node*>::iterator end;
+
 public:
     Scope(std::vector<Node*>::iterator &cur_iter, VarValues &values);
-    std::vector<Node*> getScopeCode() const { return scope_code; };
-    bool isValid () { return !scope_code.empty(); }
+    std::vector<Node*>::iterator getBeginScopeCode() const { return begin; };
+    std::vector<Node*>::iterator getEndScopeCode() const { return end; };
 
-    //~Scope() = default;
+    bool isValid () { return valid; }
+
+    ~Scope() = default;
 };
 
 class Branch_Operator: public Node {
@@ -162,10 +167,11 @@ public:
     void setScope (Scope* scope_) { scope = scope_; }
     bool isConditionTrue (VarValues & GlobalValues) {
         return condition->isTrue(GlobalValues); };
-    std::vector<Node*> getScope() { return scope->getScopeCode(); }
+    std::vector<Node*>::iterator getBeginScope() const { return scope->getBeginScopeCode(); }
+    std::vector<Node*>::iterator getEndScope() const { return scope->getEndScopeCode(); }
     bool isValid () { return ( (condition != nullptr && scope != nullptr) && (condition->isValid() && scope->isValid())); }
 
-    //~Branch_Operator() override { delete condition; delete scope; }
+    ~Branch_Operator() override { delete condition; delete scope; }
 };
 
 

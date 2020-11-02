@@ -149,51 +149,50 @@ bool IsEnd (char c) {
     return false;
 }
 
-bool IsAddSub (Node* lex) {
+bool IsAddSub (const Node* lex) {
     if (lex == nullptr)
         return false;
     if (lex->getType() == BINOP) {
-        BinOp op = *((BinOp*) lex);
-        BinOp_t type = op.getOperation();
+        auto op = static_cast<const BinOp*>(lex);
+        BinOp_t type = op->getOperation();
         if (type == SUB || type == ADD)
             return true;
     }
-    //TODO do I need to decrement cur_pos?
+
     return false;
 }
 
-bool IsMulDiv (Node* lex) {
+bool IsMulDiv (const Node* lex) {
     if (lex == nullptr)
         return false;
     if (lex->getType() == BINOP) {
-        BinOp op = *((BinOp*) lex);
-        BinOp_t type = op.getOperation();
+        auto op =  static_cast<const BinOp*>(lex);
+        BinOp_t type = op->getOperation();
         if (type == MULT || type == DIV)
             return true;
 
     }
 
-    //TODO do I need to decrement cur_pos?
     return false;
 }
 
-bool IsLBrace (Node* lex) {
+bool IsLBrace (const Node* lex) {
     if (lex == nullptr)
         return false;
     if (lex->getType() == BRACE) {
-        Brace brace = *((Brace*) lex);
-        if (brace.getBraceType() == LROUNDBRACK)
+        auto brace = static_cast<const Brace*>(lex);
+        if (brace->getBraceType() == LROUNDBRACK)
             return true;
     }
     return false;
 }
 
-bool IsRBrace (Node* lex) {
+bool IsRBrace (const Node* lex) {
     if (lex == nullptr)
         return false;
     if (lex->getType() == BRACE) {
-        Brace brace = *((Brace*) lex);
-        if (brace.getBraceType() == RROUNDBRACK)
+        auto brace = static_cast<const Brace*>(lex);
+        if (brace->getBraceType() == RROUNDBRACK)
             return true;
     }
     return false;

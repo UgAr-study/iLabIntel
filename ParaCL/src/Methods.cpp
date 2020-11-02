@@ -1,7 +1,7 @@
 #include "../include/ExpressionHeader.h"
 #include "../include/MainHeader.h"
 
-//Node::~Node() noexcept {}
+Node::~Node() noexcept {}
 
 int Expr::Culculate(VarValues & values) const {
     return TreeCalculator (top, values);
@@ -56,9 +56,9 @@ Condition::Condition(std::vector<Node *>::iterator &cur_iter, VarValues &values)
         }
 
         if (type == BINOP) {
-            BinOp binOp = *(static_cast<BinOp*>(cur_lex));
+            auto binOp = static_cast<BinOp*>(cur_lex);
 
-            if (binOp.isCompare()) {
+            if (binOp->isCompare()) {
                 condition_nodes.push_back(new End{});
                 cmp_op = cur_lex;
             }
@@ -124,31 +124,31 @@ Scope::Scope(std::vector<Node *>::iterator &cur_iter, VarValues &values) {
         return;
     }
 
-    Brace open_brace_for_scope = *(static_cast<Brace*>(first_lex));
-    if (open_brace_for_scope.getBraceType() != OPENBRACE) {
+    auto open_brace_for_scope = static_cast<Brace*>(first_lex);
+    if (open_brace_for_scope->getBraceType() != OPENBRACE) {
         std::cout << "Error: expected OPENBRACE for scope" << std::endl;
         return;
     }
 
     int number_of_opened_braces = 1;
+    begin = cur_iter + 1;
 
     while (number_of_opened_braces > 0) {
         Node* cur_lex = *(++cur_iter);
 
         if (cur_lex->getType() == BRACE) {
-            Brace brace = *(static_cast<Brace*>(cur_lex));
+            auto brace = static_cast<Brace*>(cur_lex);
 
-            if (brace.getBraceType() == OPENBRACE)
+            if (brace->getBraceType() == OPENBRACE)
                 number_of_opened_braces++;
 
-            if (brace.getBraceType() == CLOSEBRACE)
+            if (brace->getBraceType() == CLOSEBRACE)
                 number_of_opened_braces--;
         }
-
-        scope_code.push_back(cur_lex);
     }
 
-    scope_code.pop_back();
+    end = cur_iter;
+    valid = true;
 }
 
 Branch_Operator::Branch_Operator(Branch_Operator_t type,
