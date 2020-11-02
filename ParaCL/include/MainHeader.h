@@ -8,8 +8,6 @@
 
 
 enum Node_t     { BINOP, EXPR, FUNC, BRANCHOPERATOR, CONDITION, SCOPE, VARNAME, BRACE, NUM, END };
-// BRANCHOPERATOR is {if / while}
-
 enum BinOp_t    { ADD, SUB, MULT, DIV, ASSIGN, EQUAL, NOTEQUAL, LESS, OVER, LESSEQUAL, OVEREQUAL };
 enum Foo_t      { SCAN, PRINT };
 enum Braces_t   { LROUNDBRACK, RROUNDBRACK, OPENBRACE, CLOSEBRACE };
@@ -99,7 +97,6 @@ public:
         : func (type), Node(FUNC) {};
     Foo_t getFunction () const { return func; }
     void setExpr (std::vector<Node*>::iterator &cur_iter, VarValues &values) { expression = new Expr{cur_iter, values}; };
-    const Expr getExpression () const { return *expression; }
     int CulcExpression(VarValues & values) { return expression->Culculate(values); }
     ~Func() override { delete expression; };
 };
@@ -133,7 +130,7 @@ public:
     bool isTrue(VarValues& GlobalValues) const;
     bool isValid() { return b_op != nullptr; }
 
-    ~Condition() = default; // TODO: may be i delete useful information
+    ~Condition() = default;
 };
 
 class Scope {
@@ -169,7 +166,8 @@ public:
         return condition->isTrue(GlobalValues); };
     std::vector<Node*>::iterator getBeginScope() const { return scope->getBeginScopeCode(); }
     std::vector<Node*>::iterator getEndScope() const { return scope->getEndScopeCode(); }
-    bool isValid () { return ( (condition != nullptr && scope != nullptr) && (condition->isValid() && scope->isValid())); }
+    bool isValid () { return ( (condition != nullptr && scope != nullptr) &&
+                               (condition->isValid() && scope->isValid())); }
 
     ~Branch_Operator() override { delete condition; delete scope; }
 };

@@ -9,4 +9,3 @@ Node* Term            (std::vector<Node *>::iterator &cur_iter, VarValues &value
 
 int TreeCalculator (const Node* top, VarValues & values);
 void PrintTree (const Node* top, int n_tabs);
-void RecursiveDelete(Node* top);

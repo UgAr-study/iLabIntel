@@ -1,5 +1,4 @@
 #include "../include/ExpressionHeader.h"
-#include "../include/MainHeader.h"
 
 Node::~Node() noexcept {}
 
@@ -41,12 +40,12 @@ Condition::Condition(std::vector<Node *>::iterator &cur_iter, VarValues &values)
         Node_t type = cur_lex->getType();
 
         if (type == BRACE) {
-            Brace brace = *(static_cast<Brace*>(cur_lex));
+            auto brace = static_cast<const Brace*>(cur_lex);
 
-            if (brace.getBraceType() == LROUNDBRACK)
+            if (brace->getBraceType() == LROUNDBRACK)
                 number_of_opened_brackets++;
 
-            if (brace.getBraceType() == RROUNDBRACK)
+            if (brace->getBraceType() == RROUNDBRACK)
                 number_of_opened_brackets--;
         }
 
@@ -56,7 +55,7 @@ Condition::Condition(std::vector<Node *>::iterator &cur_iter, VarValues &values)
         }
 
         if (type == BINOP) {
-            auto binOp = static_cast<BinOp*>(cur_lex);
+            auto binOp = static_cast<const BinOp*>(cur_lex);
 
             if (binOp->isCompare()) {
                 condition_nodes.push_back(new End{});
@@ -124,7 +123,7 @@ Scope::Scope(std::vector<Node *>::iterator &cur_iter, VarValues &values) {
         return;
     }
 
-    auto open_brace_for_scope = static_cast<Brace*>(first_lex);
+    auto open_brace_for_scope = static_cast<const Brace*>(first_lex);
     if (open_brace_for_scope->getBraceType() != OPENBRACE) {
         std::cout << "Error: expected OPENBRACE for scope" << std::endl;
         return;
@@ -137,7 +136,7 @@ Scope::Scope(std::vector<Node *>::iterator &cur_iter, VarValues &values) {
         Node* cur_lex = *(++cur_iter);
 
         if (cur_lex->getType() == BRACE) {
-            auto brace = static_cast<Brace*>(cur_lex);
+            auto brace = static_cast<const Brace*>(cur_lex);
 
             if (brace->getBraceType() == OPENBRACE)
                 number_of_opened_braces++;

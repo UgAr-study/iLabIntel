@@ -1,23 +1,34 @@
 #include "../include/ParserHeader.h"
-#include "../include/ExpressionHeader.h"
 
 std::vector<char>
 ReadFile (const char* filename) {
+
+    std::vector<char> text;
+
     FILE* file = std::fopen(filename, "r");
+    if (file == nullptr) {
+        std::cout << "Some problems with file" << std::endl;
+        return text;
+    }
+
     struct stat buf{};
     fstat (fileno(file), &buf);
     unsigned size = buf.st_size;
-    std::vector<char> text;
+
+
     text.reserve(size);
     char c;
     while ((c = std::fgetc(file)) != EOF) {
         text.push_back(c);
     }
+
     std::fclose(file);
     return text;
 }
 
-void Parser (std::vector<Node*>::iterator begin, std::vector<Node*>::iterator end, VarValues* GlobalValues) {
+void Parser (std::vector<Node*>::iterator begin,
+             std::vector<Node*>::iterator end,
+             VarValues* GlobalValues) {
 
 
     VarValues* values;
@@ -26,7 +37,7 @@ void Parser (std::vector<Node*>::iterator begin, std::vector<Node*>::iterator en
     else
         values = new std::unordered_map<std::string, Num*>;
 
-    std::vector<Node*>::iterator lexem = begin;
+    auto lexem = begin;
     for (; lexem != end; ++lexem) {
         Node_t type = (*lexem)->getType();
 

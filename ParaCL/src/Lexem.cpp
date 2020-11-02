@@ -11,7 +11,6 @@ Lexer (std::vector<char>& text) {
 }
 
 Node* GetLexem (std::vector<char>& text, unsigned& cur_pos) {
-    int flag = 0;
 
     while (std::isspace(text[cur_pos]))
         ++cur_pos;
@@ -242,8 +241,8 @@ void PrintLexem (const Node* lex, int n_tabs) {
     switch (lex->getType()) {
 
         case BINOP: {
-            BinOp binop = *((BinOp*) lex);
-            switch (binop.getOperation()) {
+            auto bin_op = static_cast<const BinOp*>(lex);
+            switch (bin_op->getOperation()) {
 
                 case ADD:
                     std::cout << "BinOp: ADD";
@@ -260,6 +259,24 @@ void PrintLexem (const Node* lex, int n_tabs) {
                 case ASSIGN:
                     std::cout << "BinOp: ASSIGN";
                     break;
+                case EQUAL:
+                    std::cout << "BinOp: EQUAL";
+                    break;
+                case NOTEQUAL:
+                    std::cout << "BinOp: NOTEQUAL";
+                    break;
+                case LESS:
+                    std::cout << "BinOp: LESS";
+                    break;
+                case OVER:
+                    std::cout << "BinOp: OVER";
+                    break;
+                case LESSEQUAL:
+                    std::cout << "BinOp: LESSEQUAL";
+                    break;
+                case OVEREQUAL:
+                    std::cout << "BinOp: OVEREQUAL";
+                    break;
             }
 
             break;
@@ -268,9 +285,9 @@ void PrintLexem (const Node* lex, int n_tabs) {
             std::cout << "Expression";
             break;
         case FUNC: {
-            Func func = *((Func*) lex);
+            auto func = static_cast<const Func*>(lex);
 
-            switch (func.getFunction()) {
+            switch (func->getFunction()) {
                 case SCAN:
                     std::cout << "Func: SCAN";
                     break;
@@ -281,31 +298,43 @@ void PrintLexem (const Node* lex, int n_tabs) {
 
             break;
         }
-        case BRANCHOPERATOR:
-            std::cout << "Branch_Operator: don't know yet :(";
+        case BRANCHOPERATOR: {
+            auto branch = static_cast<const Branch_Operator*>(lex);
+            if (branch->getOperatorType() == IF)
+                std::cout << "Branch_Operator: IF";
+            if (branch->getOperatorType() == WHILE)
+                std::cout << "Branch_Operator: IF";
+            else
+                std::cout << "Branch_Operator: don't know yet :(";
             break;
+        }
         case VARNAME: {
-            VarName var = *((VarName*) lex);
-            std::cout << "VAR: " << var.getName();
+            auto var = static_cast<const VarName*>(lex);
+            std::cout << "VAR: " << var->getName();
             break;
         }
         case BRACE: {
-            Brace brace = *((Brace*) lex);
+            auto brace = static_cast<const Brace*>(lex);
 
-            switch (brace.getBraceType()) {
+            switch (brace->getBraceType()) {
                 case LROUNDBRACK:
                     std::cout << "Brace: LROUNDBRACK";
                     break;
                 case RROUNDBRACK:
                     std::cout << "Brace: RROUNDBRACK";
                     break;
+                case OPENBRACE:
+                    std::cout << "Brace: OPENBRACE";
+                    break;
+                case CLOSEBRACE:
+                    std::cout << "Brace: CLOSEBRACE";
+                    break;
             }
-
             break;
         }
         case NUM: {
-            Num num = *((Num*) lex);
-            std::cout << "Num: " << num.getNum();
+            auto num = static_cast<const Num*>(lex);
+            std::cout << "Num: " << num->getNum();
             break;
         }
         case END:

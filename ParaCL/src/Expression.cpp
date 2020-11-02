@@ -2,9 +2,9 @@
 #include "../include/LexemHeader.h"
 #include "../include/ExpressionHeader.h"
 
-Node* BuildSyntaxTree (std::vector<Node *>::iterator &cur_iter, VarValues& values /*, VarTable& variables*/) {
+Node* BuildSyntaxTree (std::vector<Node *>::iterator &cur_iter, VarValues& values) {
     Node* tree;
-    tree = Expression (cur_iter, values/*, variables*/);
+    tree = Expression (cur_iter, values);
 
     if (tree == nullptr) {
         printf ("Nothing to be calculated\n");
@@ -98,7 +98,7 @@ Node* Multiplication (std::vector<Node *>::iterator &cur_iter, VarValues& values
 }
 
 Node* Term (std::vector<Node *>::iterator &cur_iter, VarValues& values) {
-    Node* term = nullptr;
+    Node* term;
     Node* cur_lex = *cur_iter;
 
     Node_t type = cur_lex->getType();
@@ -143,12 +143,12 @@ int TreeCalculator (const Node* top, VarValues & values) {
     int result = 0, left = 0, right = 0;
 
     if (top->getType() == NUM) {
-        const Num *num = static_cast<const Num*>(top);
+        auto num = static_cast<const Num*>(top);
         return num->getNum();
     }
 
     if (top->getType() == VARNAME) {
-        const VarName *var = static_cast<const VarName*>(top);
+        auto var = static_cast<const VarName*>(top);
 
         if (values.find(var->getName()) == values.end()) {
             std::cout << "Error: unknown variable: " << var->getName() << std::endl;
@@ -162,7 +162,6 @@ int TreeCalculator (const Node* top, VarValues & values) {
         auto func = static_cast<const Func*>(top);
 
         if (func->getFunction() == SCAN) {
-            std::cout << "Please, input this variable: ";
             std::cin >> result;
             return result;
         }
@@ -174,20 +173,22 @@ int TreeCalculator (const Node* top, VarValues & values) {
 
 
     if (top->getType() == BINOP) {
-        const BinOp *op = static_cast<const BinOp*>(top);
+        auto op = static_cast<const BinOp*>(top);
+
         if (op->getOperation() == ASSIGN) {
-            const VarName *var = static_cast<const VarName*>(op->getLhs());
+            auto var = static_cast<const VarName*>(op->getLhs());
 
             if (values.find(var->getName()) != values.end()) {
                 return values[var->getName()]->getNum();
             }
 
             if ((op->getRhs())->getType() == EXPR) {
-                const Expr *expr = static_cast<const Expr*>(op->getRhs());
+                auto expr = static_cast<const Expr*>(op->getRhs());
+
                 if (expr->getTopType() == FUNC) {
-                    const Func *func = static_cast<const Func*>(op->getRhs());
+                    auto func = static_cast<const Func*>(op->getRhs());
+
                     if (func->getFunction() == SCAN) {
-                        std::cout << "Please, input this variable: " << var->getName() << " = ";
                         std::cin >> result;
                         values[var->getName()] = new Num{result};
                         return result;
@@ -206,27 +207,15 @@ int TreeCalculator (const Node* top, VarValues & values) {
 
             case ADD:
                 result = left + right;
-                #ifdef DEBUG
-                std::cout << left << " + " << right << "   ";
-                #endif
                 break;
             case SUB:
                 result = left - right;
-                #ifdef DEBUG
-                std::cout << left << " - " << right << "   ";
-                #endif
                 break;
             case MULT:
                 result = left * right;
-                #ifdef DEBUG
-                std::cout << left << " * " << right << "   ";
-                #endif
                 break;
             case DIV:
                 result = left / right;
-                #ifdef DEBUG
-                std::cout << left << " / " << right << "   ";
-                #endif
                 break;
             case ASSIGN:
                 std::cout << "ASSIGN: Oh shit! Here we go again..." << std::endl;
@@ -249,49 +238,32 @@ void PrintTree (const Node* top, int n_tabs) {
     }
 
     if (top->getType() == BINOP) {
-        BinOp op = *(static_cast<const BinOp*>(top));
+        auto op = static_cast<const BinOp*>(top);
         PrintLexem(top, n_tabs);
 
-        PrintLexem(op.getLhs(), n_tabs);
-        PrintLexem(op.getRhs(), n_tabs);
+        PrintLexem(op->getLhs(), n_tabs);
+        PrintLexem(op->getRhs(), n_tabs);
         std::cout << std::endl << std::endl;
 
         Indents(n_tabs);
         std::cout << "Left:" << std::endl;
-        PrintTree(op.getLhs(), n_tabs + 1);
+        PrintTree(op->getLhs(), n_tabs + 1);
 
         Indents(n_tabs);
         std::cout << "Right:" << std::endl;
-        PrintTree(op.getRhs(), n_tabs + 1);
+        PrintTree(op->getRhs(), n_tabs + 1);
 
         return;
     }
 
     if (top->getType() == EXPR) {
-        Expr expr = *(static_cast<const Expr*>(top));
+        auto expr = static_cast<const Expr*>(top);
         PrintLexem(top, n_tabs);
-        PrintTree(expr.getTop(), n_tabs + 1);
+        PrintTree(expr->getTop(), n_tabs + 1);
         return;
     }
 
     PrintLexem(top, n_tabs);
     std::cout << std::endl;
 }
-
-/*
-void RecursiveDelete(const Node* top) {
-
-    if (top->getType() == BINOP) {
-        BinOp b_op = *(static_cast<const BinOp*>(top));
-
-        if (b_op.getLhs() != nullptr)
-            RecursiveDelete(b_op.getLhs());
-
-        if (b_op.getRhs() != nullptr)
-            RecursiveDelete(b_op.getRhs());
-    }
-
-
-
-}*/
 
