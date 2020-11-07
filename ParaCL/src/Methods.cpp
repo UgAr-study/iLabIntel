@@ -6,7 +6,7 @@ int Expr::Culculate(VarValues & values) const {
     return TreeCalculator (top, values);
 }
 
-Expr::Expr(std::vector<Node *>::iterator &cur_iter, VarValues& values ) : Node(EXPR){
+Expr::Expr(std::vector<Node *>::iterator &cur_iter, VarValues& values, int l_num) : Node(EXPR, (*cur_iter)->getLineNumber()){
     top = BuildSyntaxTree(cur_iter, values);
 }
 
@@ -15,17 +15,20 @@ void Expr::Dump() const {
 }
 
 
-Condition::Condition(std::vector<Node *>::iterator &cur_iter, VarValues &values) {
+Condition::Condition(std::vector<Node *>::iterator &cur_iter, std::vector<Node *>::iterator end, VarValues &values) {
     Node* first_lex = *cur_iter;
 
+    if (cur_iter == end)
+        return;
+
     if (first_lex->getType() != BRACE) {
-        std::cout << "Error: expected LROUNDBRACK for condition" << std::endl;
+        std::cout << "Error: line " << first_lex->getLineNumber() << ": expected LROUNDBRACK for condition" << std::endl;
         return;
     }
 
     Brace open_brace_for_scope = *(static_cast<Brace*>(first_lex));
     if (open_brace_for_scope.getBraceType() != LROUNDBRACK) {
-        std::cout << "Error: expected LROUNDBRACK for condition" << std::endl;
+        std::cout << "Error: line " << open_brace_for_scope.getLineNumber() << ": expected LROUNDBRACK for condition" << std::endl;
         return;
     }
 
@@ -37,6 +40,10 @@ Condition::Condition(std::vector<Node *>::iterator &cur_iter, VarValues &values)
     while (number_of_opened_brackets > 0) {
 
         Node* cur_lex = *(++cur_iter);
+
+        if (cur_iter == end)
+            return;
+
         Node_t type = cur_lex->getType();
 
         if (type == BRACE) {
@@ -50,7 +57,7 @@ Condition::Condition(std::vector<Node *>::iterator &cur_iter, VarValues &values)
         }
 
         if (type == END) {
-            std::cout << "Error: End in the condition" << std::endl;
+            std::cout << "Error: line " << cur_lex->getLineNumber() <<": end in the condition" << std::endl;
             return;
         }
 
@@ -58,7 +65,7 @@ Condition::Condition(std::vector<Node *>::iterator &cur_iter, VarValues &values)
             auto binOp = static_cast<const BinOp*>(cur_lex);
 
             if (binOp->isCompare()) {
-                condition_nodes.push_back(new End{});
+                condition_nodes.push_back(new End{binOp->getLineNumber()});
                 cmp_op = cur_lex;
             }
         }
@@ -67,15 +74,15 @@ Condition::Condition(std::vector<Node *>::iterator &cur_iter, VarValues &values)
     }
 
     condition_nodes.pop_back();
-    condition_nodes.push_back (new End{});
+    condition_nodes.push_back (new End{(*cur_iter)->getLineNumber()});
 
     b_op = static_cast<BinOp*>(cmp_op);
 
     auto lhs_begin = condition_nodes.begin();
-    Expr* left_expr = new Expr{lhs_begin, values};
+    Expr* left_expr = new Expr{lhs_begin, values, (*lhs_begin)->getLineNumber()};
 
     auto rhs_begin = lhs_begin + 3;
-    Expr* right_expr = new Expr{rhs_begin, values};
+    Expr* right_expr = new Expr{rhs_begin, values, (*rhs_begin)->getLineNumber()};
 
     b_op->setLhs(static_cast<Node*>(left_expr));
     b_op->setRhs(static_cast<Node*>(right_expr));
@@ -100,7 +107,7 @@ bool Condition::isTrue(VarValues &GlobalValues) const {
         case OVEREQUAL:
             return (left_res >= right_res);
         default:
-            std::cout << "Error: expected comparing operation in condition" << std::endl;
+            std::cout << "Error: line " << b_op->getLineNumber() << ": expected comparing operation in condition" << std::endl;
             return false;
     }
 }
@@ -115,17 +122,19 @@ bool BinOp::isCompare() const {
     return false;
 }
 
-Scope::Scope(std::vector<Node *>::iterator &cur_iter, VarValues &values) {
+Scope::Scope(std::vector<Node *>::iterator &cur_iter, std::vector<Node *>::iterator end_code, VarValues &values) {
     Node* first_lex = *cur_iter;
+    if (cur_iter == end_code)
+        return;
 
     if (first_lex->getType() != BRACE) {
-        std::cout << "Error: expected OPENBRACE for scope" << std::endl;
+        std::cout << "Error: line " << first_lex->getLineNumber() << ": expected OPENBRACE for scope" << std::endl;
         return;
     }
 
     auto open_brace_for_scope = static_cast<const Brace*>(first_lex);
     if (open_brace_for_scope->getBraceType() != OPENBRACE) {
-        std::cout << "Error: expected OPENBRACE for scope" << std::endl;
+        std::cout << "Error: line " << open_brace_for_scope->getLineNumber() << ": expected OPENBRACE for scope" << std::endl;
         return;
     }
 
@@ -134,6 +143,9 @@ Scope::Scope(std::vector<Node *>::iterator &cur_iter, VarValues &values) {
 
     while (number_of_opened_braces > 0) {
         Node* cur_lex = *(++cur_iter);
+
+        if (cur_iter == end_code)
+            return;
 
         if (cur_lex->getType() == BRACE) {
             auto brace = static_cast<const Brace*>(cur_lex);
@@ -152,22 +164,26 @@ Scope::Scope(std::vector<Node *>::iterator &cur_iter, VarValues &values) {
 
 Branch_Operator::Branch_Operator(Branch_Operator_t type,
                                  std::vector<Node *>::iterator &cur_iter,
+                                 std::vector<Node *>::iterator end,
                                  VarValues &values)
-                                 : op_type(type), Node(BRANCHOPERATOR) {
+                                 : op_type(type), Node(BRANCHOPERATOR, (*cur_iter)->getLineNumber()) {
 
-    auto condition_ = new Condition{cur_iter, values};
+    Node* condition_start = *cur_iter;
+
+    auto condition_ = new Condition{cur_iter, end, values};
 
     if (!condition_->isValid()) {
-        std::cout << "Error: condition is not valid" << std::endl;
+        std::cout << "Error: line " << condition_start->getLineNumber() << ": condition is not valid" << std::endl;
         return;
     }
 
     setCondition(condition_);
 
-    auto scope_ = new Scope {(++cur_iter), values};
+    Node* scope_start = *cur_iter;
+    auto scope_ = new Scope {(++cur_iter), end, values};
 
     if (!scope_->isValid()) {
-        std::cout << "Error: scop is not valid" << std::endl;
+        std::cout << "Error: line " << scope_start->getLineNumber() << ": scop is not valid" << std::endl;
         return;
     }
 

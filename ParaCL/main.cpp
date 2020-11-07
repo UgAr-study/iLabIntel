@@ -15,6 +15,9 @@ int main(int argc, char* argv[]) {
     }
 
     std::vector<Node*> lexems = Lexer(text);
+    if (lexems.empty())
+        return 0;
+
     Parser(lexems.begin(), lexems.end(), nullptr);
     return 0;
 }

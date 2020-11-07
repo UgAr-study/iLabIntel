@@ -4,7 +4,7 @@
 std::vector<Node*>
 Lexer (std::vector<char>& text);
 
-Node* GetLexem (std::vector<char>& text, unsigned& cur_pos);
+Node* GetLexem (std::vector<char>& text, unsigned& cur_pos, int& l_num);
 
 bool IsCorrectSymbolForVarName (char c);
 std::string

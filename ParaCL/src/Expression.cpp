@@ -38,7 +38,7 @@ Node* Expression (std::vector<Node *>::iterator &cur_iter, VarValues& values) {
                 Node *rhs = Multiplication(cur_iter, values);
 
                 if (rhs == nullptr) {
-                    std::cout << "Wrong format: expected a number or expression\n";
+                    std::cout << "Wrong format: line " << (*cur_iter)->getLineNumber() << ": expected a number or expression\n";
                     delete expression;
                     return nullptr;
                 }
@@ -79,7 +79,7 @@ Node* Multiplication (std::vector<Node *>::iterator &cur_iter, VarValues& values
                 Node *rhs = Term(cur_iter, values);
 
                 if (rhs == nullptr) {
-                    std::cout << "Wrong format: expected a number or expression\n";
+                    std::cout << "Wrong format: line " << (*cur_iter)->getLineNumber() <<": expected a number or expression\n";
                     delete mult;
                     return nullptr;
                 }
@@ -115,14 +115,14 @@ Node* Term (std::vector<Node *>::iterator &cur_iter, VarValues& values) {
             Node* rhs = Expression(++cur_iter, values);
 
             if (rhs == nullptr) {
-                std::cout << "Wrong format: expected a number or expression\n";
+                std::cout << "Wrong format: line " << binop->getLineNumber() << ": expected a number or expression\n";
                 return nullptr;
             }
 
             binop->setRhs(rhs);
             return cur_lex;
         } else {
-            std::cout << "Error: unknown operation\n";
+            std::cout << "Error: line " << binop->getLineNumber() << ": unknown operation\n";
             return nullptr;
         }
     }
@@ -130,7 +130,7 @@ Node* Term (std::vector<Node *>::iterator &cur_iter, VarValues& values) {
     if (type == VARNAME) {
         auto var = static_cast<VarName*>(cur_lex);
         if (values.find(var->getName()) == values.end()) {
-            std::cout << "Error: unknown variable [" << var->getName() << "]" << std::endl;
+            std::cout << "Error: line " << var->getLineNumber() << ": unknown variable [" << var->getName() << "]" << std::endl;
             return nullptr;
         }
         return cur_lex;
@@ -142,13 +142,13 @@ Node* Term (std::vector<Node *>::iterator &cur_iter, VarValues& values) {
         cur_lex = *(++cur_iter);
 
         if (!IsRBrace(cur_lex)) {
-            std::cout << "Wrong format: expected ')'\n";
+            std::cout << "Wrong format: line " << cur_lex->getLineNumber() << ": expected ')'\n";
             return nullptr;
         }
 
         return term;
     } else {
-        std::cout << "Wrong format: expected variable or brace\n";
+        std::cout << "Wrong format: line " << cur_lex->getLineNumber() << ": expected variable or brace\n";
         return nullptr;
     }
 }
@@ -170,7 +170,7 @@ int TreeCalculator (const Node* top, VarValues & values) {
         auto var = static_cast<const VarName*>(top);
 
         if (values.find(var->getName()) == values.end()) {
-            std::cout << "Error: unknown variable: " << var->getName() << std::endl;
+            std::cout << "Error: line " << var->getLineNumber() << ": unknown variable: " << var->getName() << std::endl;
             return 0;
         }
 
@@ -185,7 +185,7 @@ int TreeCalculator (const Node* top, VarValues & values) {
             return result;
         }
         else {
-            std::cout << "Error: unknow function for variable" << std::endl;
+            std::cout << "Error: line " << func->getLineNumber() << ": unknow function for variable" << std::endl;
             return 0;
         }
     }
@@ -209,15 +209,15 @@ int TreeCalculator (const Node* top, VarValues & values) {
 
                     if (func->getFunction() == SCAN) {
                         std::cin >> result;
-                        values[var->getName()] = new Num{result};
+                        values[var->getName()] = new Num{result, var->getLineNumber()};
                         return result;
                     }
                 }
                 result = TreeCalculator(expr->getTop(), values);
-                values[var->getName()] = new Num{result};
+                values[var->getName()] = new Num{result, var->getLineNumber()};
                 return result;
             }
-            std::cout << "Error: unknown operation for ASSIGN\n";
+            std::cout << "Error: line " << var->getLineNumber() << ": unknown operation for ASSIGN" << std::endl;
         }
 
         if (op->getLhs() == nullptr && op->getOperation() == SUB) {
@@ -241,13 +241,13 @@ int TreeCalculator (const Node* top, VarValues & values) {
                 result = left / right;
                 break;
             case ASSIGN:
-                std::cout << "ASSIGN: Oh shit! Here we go again..." << std::endl;
+                std::cout << "Error: line " << op->getLineNumber() << ": '=' not expected here" << std::endl;
                 break;
         }
         return result;
     }
 
-    std::cout << "Something went wrong while calculating\n";
+    std::cout << "Error: line " << top->getLineNumber() << ": something went wrong while calculating\n";
     return 0;
 }
 

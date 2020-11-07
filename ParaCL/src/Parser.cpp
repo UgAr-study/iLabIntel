@@ -45,10 +45,10 @@ void Parser (std::vector<Node*>::iterator begin,
             Branch_Operator branch_operator = *(static_cast<Branch_Operator*>(*lexem));
 
             if (branch_operator.getOperatorType() == IF) {
-                auto if_operator = new Branch_Operator{IF, (++lexem), *values};
+                auto if_operator = new Branch_Operator{IF, (++lexem), end, *values};
 
                 if (!if_operator->isValid()) {
-                    std::cout << "Error: if_operator is not valid" << std::endl;
+                    std::cout << "Error: line " << branch_operator.getLineNumber() << ": 'IF' operator is not valid" << std::endl;
                     return;
                 }
 
@@ -58,10 +58,10 @@ void Parser (std::vector<Node*>::iterator begin,
             }
 
             if (branch_operator.getOperatorType() == WHILE) {
-                auto while_operator = new Branch_Operator{WHILE, (++lexem), *values};
+                auto while_operator = new Branch_Operator{WHILE, (++lexem), end, *values};
 
                 if (!while_operator->isValid()) {
-                    std::cout << "Error: if_operator is not valid" << std::endl;
+                    std::cout << "Error: line " << branch_operator.getLineNumber() << ": 'WHILE' operator is not valid" << std::endl;
                     return;
                 }
 
@@ -82,7 +82,7 @@ void Parser (std::vector<Node*>::iterator begin,
                 std::cout << func->CulcExpression(*values) << std::endl;
             }
             else if (func->getFunction() == SCAN) {
-                std::cout << "Error: not expected SCAN here\n";
+                std::cout << "Error: line " << func->getLineNumber() << ": not expected SCAN here\n";
                 return;
             }
             continue;
@@ -95,18 +95,18 @@ void Parser (std::vector<Node*>::iterator begin,
                 auto bop = static_cast<BinOp*>(*lexem);
 
                 if (bop->getOperation() == ASSIGN) {
-                    Expr *rhs = new Expr{++lexem, *values};
+                    Expr *rhs = new Expr{++lexem, *values, (*lexem)->getLineNumber()};
                     bop->setLhs(var);
                     bop->setRhs(rhs);
-                    (*values)[var->getName()] = new Num(rhs->Culculate(*values));
+                    (*values)[var->getName()] = new Num(rhs->Culculate(*values), var->getLineNumber());
                 }
                 else {
-                    std::cout << "Error: don't know what to do with this variable: " << var->getName() << std::endl;
+                    std::cout << "Error: line " << bop->getLineNumber() << ": don't know what to do with this variable: " << var->getName() << std::endl;
                     return;
                 }
             }
             else {
-                std::cout << "Error: don't know what to do with this variable: " << var->getName() << std::endl;
+                std::cout << "Error: line " << var->getLineNumber() << ": don't know what to do with this variable: " << var->getName() << std::endl;
                 return;
             }
 
@@ -116,7 +116,7 @@ void Parser (std::vector<Node*>::iterator begin,
         if (type == END)
             continue;
         else {
-            std::cout << "Error: expected var or function\n";
+            std::cout << "Error: line " << (*lexem)->getLineNumber() << ": expected var or function\n";
             return;
         }
     }

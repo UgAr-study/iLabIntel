@@ -3,140 +3,166 @@
 std::vector<Node*>
 Lexer (std::vector<char>& text) {
     std::vector<Node*> lexems;
+    int l_num = 1;
     unsigned cur_pos = 0;
     for (; cur_pos < text.size(); ++cur_pos) {
-        lexems.push_back(GetLexem(text, cur_pos));
+        Node* cur_lexem = GetLexem(text, cur_pos, l_num);
+
+        if (cur_lexem == nullptr) {
+            std::vector<Node*> bad_vec;
+            return bad_vec;
+        }
+
+        lexems.push_back(cur_lexem);
     }
     return lexems;
 }
 
-Node* GetLexem (std::vector<char>& text, unsigned& cur_pos) {
+Node* GetLexem (std::vector<char>& text, unsigned& cur_pos, int& l_num) {
 
-    while (std::isspace(text[cur_pos]))
+    while (std::isspace(text[cur_pos])) {
+        if (text[cur_pos] == '\n')
+            ++l_num;
         ++cur_pos;
+    }
 
     if (IsEnd(text[cur_pos])) {
-        auto res = new End{};
+        auto res = new End{l_num};
         return res;
     }
 
     if (std::isalpha(text[cur_pos])) {
         std::string name = GetName (text, cur_pos);
         if (name == "print") {
-            auto res = new Func{PRINT};
+            auto res = new Func{PRINT, l_num};
             return res;
         } else if (name == "if") {
-            auto res = new Branch_Operator{IF};
+            auto res = new Branch_Operator{IF, l_num};
             return res;
         } else if (name == "while") {
-            auto res = new Branch_Operator{WHILE};
+            auto res = new Branch_Operator{WHILE, l_num};
             return res;
         } else {
-            auto res = new VarName{name};
+            auto res = new VarName{name, l_num};
             return res;
         }
     }
 
     if (std::isdigit(text[cur_pos])) {
         int num = GetNumber (text, cur_pos);
-        auto res = new Num {num};
+        auto res = new Num {num, l_num};
         return res;
     }
 
 
     switch (text[cur_pos]) {
         case '+': {
-            auto res = new BinOp{ADD};
+            auto res = new BinOp{ADD, l_num};
             return res;
         }
         case '-': {
-            auto res = new BinOp{SUB};
+            auto res = new BinOp{SUB, l_num};
             return res;
         }
         case '*': {
-            auto res = new BinOp{MULT};
+            auto res = new BinOp{MULT, l_num};
             return res;
         }
         case '/': {
-            auto res = new BinOp{DIV};
+            auto res = new BinOp{DIV, l_num};
             return res;
         }
         case '=': {
 
-            while (std::isspace(text[cur_pos + 1]))
+            while (std::isspace(text[cur_pos + 1])) {
+                if (text[cur_pos] == '\n')
+                    ++l_num;
                 ++cur_pos;
+            }
 
             if (text[cur_pos + 1] == '=') {
-                auto res = new BinOp{EQUAL};
+                auto res = new BinOp{EQUAL, l_num};
                 cur_pos++;
                 return res;
             }
 
-            auto res = new BinOp{ASSIGN};
+            auto res = new BinOp{ASSIGN, l_num};
             return res;
         }
 
         case '<': {
-            while (std::isspace(text[cur_pos + 1]))
+            while (std::isspace(text[cur_pos + 1])) {
+                if (text[cur_pos] == '\n')
+                    ++l_num;
                 ++cur_pos;
+            }
 
             if (text[cur_pos + 1] == '=') {
-                auto res = new BinOp{LESSEQUAL};
+                auto res = new BinOp{LESSEQUAL, l_num};
                 cur_pos++;
                 return res;
             }
 
-            auto res = new BinOp{LESS};
+            auto res = new BinOp{LESS, l_num};
             return res;
         }
 
         case '>': {
-            while (std::isspace(text[cur_pos + 1]))
+            while (std::isspace(text[cur_pos + 1])) {
+                if (text[cur_pos] == '\n')
+                    ++l_num;
                 ++cur_pos;
+            }
 
             if (text[cur_pos + 1] == '=') {
-                auto res = new BinOp{OVEREQUAL};
+                auto res = new BinOp{OVEREQUAL, l_num};
                 cur_pos++;
                 return res;
             }
 
-            auto res = new BinOp{OVER};
+            auto res = new BinOp{OVER, l_num};
             return res;
         }
 
         case '!': {
-            while (std::isspace(text[cur_pos + 1]))
+            while (std::isspace(text[cur_pos + 1])) {
+                if (text[cur_pos] == '\n')
+                    ++l_num;
                 ++cur_pos;
+            }
 
             if (text[cur_pos + 1] == '=') {
-                auto res = new BinOp{NOTEQUAL};
+                auto res = new BinOp{NOTEQUAL, l_num};
                 cur_pos++;
                 return res;
             }
 
+            std::cout << "Error: line " << l_num << ": after '!' expected '=' " << std::endl;
             Node* res = nullptr;
             return res;
         }
         case '(': {
-            auto res = new Brace{LROUNDBRACK};
+            auto res = new Brace{LROUNDBRACK, l_num};
             return res;
         }
         case ')': {
-            auto res = new Brace{RROUNDBRACK};
+            auto res = new Brace{RROUNDBRACK, l_num};
             return res;
         }
         case '{': {
-            auto res = new Brace{OPENBRACE};
+            auto res = new Brace{OPENBRACE, l_num};
             return res;
         }
         case '}': {
-            auto res = new Brace{CLOSEBRACE};
+            auto res = new Brace{CLOSEBRACE, l_num};
             return res;
         }
         case '?': {
-            auto res = new Func {SCAN};
+            auto res = new Func {SCAN, l_num};
             return res;
         }
+        default:
+            std::cout << "Error: line " << l_num << ": Unknown symbol" << std::endl;
     }
 
     return nullptr;
