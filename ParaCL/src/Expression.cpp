@@ -108,6 +108,25 @@ Node* Term (std::vector<Node *>::iterator &cur_iter, VarValues& values) {
     if (type == NUM || type == FUNC)
         return cur_lex;
 
+    if (type == BINOP) {
+        auto binop = static_cast<BinOp*>(cur_lex);
+
+        if (binop->getOperation() == SUB) {
+            Node* rhs = Expression(++cur_iter, values);
+
+            if (rhs == nullptr) {
+                std::cout << "Wrong format: expected a number or expression\n";
+                return nullptr;
+            }
+
+            binop->setRhs(rhs);
+            return cur_lex;
+        } else {
+            std::cout << "Error: unknown operation\n";
+            return nullptr;
+        }
+    }
+
     if (type == VARNAME) {
         auto var = static_cast<VarName*>(cur_lex);
         if (values.find(var->getName()) == values.end()) {
@@ -199,6 +218,10 @@ int TreeCalculator (const Node* top, VarValues & values) {
                 return result;
             }
             std::cout << "Error: unknown operation for ASSIGN\n";
+        }
+
+        if (op->getLhs() == nullptr && op->getOperation() == SUB) {
+            return -TreeCalculator(op->getRhs(), values);
         }
 
         left = TreeCalculator (op->getLhs(), values);

@@ -7,14 +7,16 @@
 #include <sys/stat.h>
 
 
-enum Node_t     { BINOP, EXPR, FUNC, BRANCHOPERATOR, CONDITION, SCOPE, VARNAME, BRACE, NUM, END };
+enum Node_t     { BINOP, UNOP, EXPR, FUNC, BRANCHOPERATOR, CONDITION, SCOPE, VARNAME, BRACE, NUM, END };
 enum BinOp_t    { ADD, SUB, MULT, DIV, ASSIGN, EQUAL, NOTEQUAL, LESS, OVER, LESSEQUAL, OVEREQUAL };
+enum UnOp_t     { UNARYMINUS };
 enum Foo_t      { SCAN, PRINT };
 enum Braces_t   { LROUNDBRACK, RROUNDBRACK, OPENBRACE, CLOSEBRACE };
 enum Branch_Operator_t { WHILE, IF };
 
 class Node;
 class BinOp;
+class UnOp;
 class Func;
 class Expr;
 class VarName;
@@ -42,14 +44,27 @@ public:
     ~End() override = default;
 };
 
+class UnOp: public Node {
+    UnOp_t operation;
+    Node *rhs;
+
+public:
+    explicit UnOp(UnOp_t type) : operation(type), Node(UNOP) {}
+
+    UnOp_t getOperation() const { return operation; }
+    void setRhs (Node* Rhs) { rhs = Rhs; }
+    const Node* getRhs() const { return rhs; }
+
+    ~UnOp() override { delete rhs; }
+};
+
 class BinOp: public Node {
     BinOp_t operation;
-    Node *lhs, *rhs;
+    Node *lhs = nullptr, *rhs = nullptr;
 
 public:
     explicit BinOp (BinOp_t type)
-        : operation(type), Node(BINOP)
-        {lhs = nullptr; rhs = nullptr;};
+        : operation(type), Node(BINOP) {};
 
     BinOp_t getOperation() const { return operation; }
     void setLhs (Node* Lhs) { lhs = Lhs; }
