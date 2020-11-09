@@ -35,7 +35,7 @@ int main() {
     std::sort (answer.begin(), answer.end());
 
     for (auto i: answer)
-        std::cout << i << " ";
+        std::cout << i << std::endl;
     std::cout << std::endl;
 
     return 0;

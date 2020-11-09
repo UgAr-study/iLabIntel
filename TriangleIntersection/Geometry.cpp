@@ -1,8 +1,6 @@
 #include "GeometryHeader.h"
 
 
-
-
 //////////////////////
 ////////Point/////////
 //////////////////////
@@ -45,16 +43,6 @@ Geom::Point Geom::Point::operator*(float a) const {
 ////////Vector////////
 //////////////////////
 
-bool Geom::Vector::IsCollinearToOther(Vector other) const {
-    /*Vector v_this = Normalize();
-    Vector v_other = other.Normalize();
-    if ((v_this.VectorMult(v_other)).IsZero())
-        return true;*/
-    if ((VectorMult(other)).IsZero())
-        return true;
-    return false;
-}
-
 Geom::Vector Geom::Vector::VectorMult(Vector second_vec) const {
     Vector res;
 
@@ -76,12 +64,6 @@ Geom::Vector Geom::Vector::VectorMult(Vector second_vec) const {
     return res;
 }
 
-bool Geom::Vector::IsZero() const {
-    if (V.Abs() <= PRECISION)
-        return true;
-    return false;
-}
-
 float Geom::Vector::ScalarMult(Geom::Vector second_vec) const {
     float scalar = V.x * second_vec.V.x + V.y * second_vec.V.y + V.z * second_vec.V.z;
     return (std::abs(scalar) <= PRECISION) ? 0 : scalar;
@@ -93,11 +75,6 @@ bool Geom::Vector::IsPerpendicularToOther(Vector other) const {
     if (std::abs (ScalarMult(other)) <= PRECISION)
         return true;
     return false;
-}
-
-Geom::Vector Geom::Vector::Normalize() const {
-    Vector v {Point{0, 0, 0}, V / Abs()};
-    return v;
 }
 
 //////////////////////
@@ -352,11 +329,6 @@ std::ostream& operator << (std::ostream &os, Geom::Plane& plane) {
     plane.Dump(os);
     return os;
 }
-
-
-
-
-
 
 
 

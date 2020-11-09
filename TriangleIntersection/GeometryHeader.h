@@ -52,13 +52,13 @@ namespace Geom {
         explicit Vector(float x, float y, float z) : V(x, y, z) {}
 
         bool IsPerpendicularToOther (Vector other) const;
-        bool IsCollinearToOther(Vector other) const;
-        bool IsZero() const;
+        bool IsCollinearToOther(Vector other) const { return (VectorMult(other)).IsZero(); };
+        bool IsZero() const { return (V.Abs() <= PRECISION); };
         bool isValid() const { return V.isValid(); }
         Vector VectorMult(Vector second_vec) const;
         float ScalarMult (Vector second_vec) const;
         float Abs() const { return V.Abs(); }
-        Vector Normalize() const;
+        Vector Normalize() const { return Vector{Point{0, 0, 0}, V / Abs()}; };
     };
 
     struct Interval {

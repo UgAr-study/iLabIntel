@@ -3,6 +3,9 @@ project (TriangleIntersection)
 
 set (CMAKE_CXX_STANDARD 14)
 
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=memory [-g]")
+
+
 add_executable (
         TriangleIntersection1
         main.cpp

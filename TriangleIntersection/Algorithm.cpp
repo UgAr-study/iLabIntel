@@ -8,7 +8,7 @@
 void Alg::Cube::CheckEveryTriangleInCube (res_table& ans_table) const {
     for (auto& i: triangles)
         for (auto& j: triangles) {
-            if (j->number <= i->number) //j.number && i.number
+            if (j->number <= i->number)
                 continue;
             if (i->IsIntersectWithOther(*j)) {
                 ans_table[i] = *i;
@@ -98,48 +98,6 @@ Alg::Cube::CubeFraction (special_trs& spec_trs) {
     return child_cubes;
 }
 
-/*
-bool Alg::Cube::IsOverlapWithInterval(Geom::Interval interval) const {
-    //check intersection with square, then check signs of ends of the interval
-    Geom::Point p000 (left_bot),
-                p100 {right_top.x, left_bot.y, left_bot.z},
-                p010 {left_bot.x, right_top.y, left_bot.z},
-                p001 {left_bot.x, left_bot.y, right_top.z},
-                p110 {right_top.x, right_top.y, left_bot.z},
-                p101 {right_top.x, left_bot.y, right_top.z},
-                p011 {left_bot.x, right_top.y, right_top.z},
-                p111 (right_top);
-
-    std::vector<Geom::Square> faces{ Geom::Square{p000, p110},
-                                     Geom::Square{p000, p101},
-                                     Geom::Square{p000, p011},
-                                     Geom::Square{p100, p111},
-                                     Geom::Square{p010, p111},
-                                     Geom::Square{p001, p111} };
-
-    std::vector<Geom::Point> inter_points_candidates;
-    inter_points_candidates.reserve(6);
-    Geom::Line line {interval.C1, interval.C2};
-    for (auto i : faces)
-        inter_points_candidates.push_back(i.IntersectionWithLine(line));
-    std::vector<Geom::Point> inter_points;
-    inter_points.reserve(2);
-    int inter_points_[2];
-    for (int i = 0, j = 0; i < 6; ++i) {
-        if (inter_points_candidates[i].isValid()) {
-            inter_points_[j++] = i;
-        }
-    }
-    for (auto i: inter_points_candidates)
-        if (i.isValid())
-            inter_points.push_back(i);
-    if (inter_points.empty())
-        return false;
-
-    return false;
-}
-*/
-
 //////////////////
 ///////Octree/////
 //////////////////
@@ -147,7 +105,7 @@ bool Alg::Cube::IsOverlapWithInterval(Geom::Interval interval) const {
 Alg::Octree::Octree(unsigned MaxDepth, unsigned num_elem_in_cube, triangle_vec& triangles) {
     maxDepth = MaxDepth;
     max_num_of_elems_in_cube = num_elem_in_cube;
-    _top = BuildTree(triangles);
+    top_ = BuildTree(triangles);
 }
 
 Alg::node_t*
@@ -165,40 +123,166 @@ Alg::Octree::BuildTree(triangle_vec& triangles) {
         trs.push_back(&triangles[i]);
     }
 
-    auto res = new node_t{Cube{main_cube[0], main_cube[1], trs, spec_trs, nullptr}};
+    auto res = new node_t{Cube{main_cube[0], main_cube[1], trs, spec_trs, nullptr}, nullptr};
     if (res->cube_.getNumberOfElems() > max_num_of_elems_in_cube) {
-        RecursiveBuild(res, 0);
+        BuildBranches(res, 0);
     }
 
     return res;
 }
 
-void Alg::Octree::RecursiveBuild(Alg::node_t *cur_node, unsigned level) {
+void Alg::Octree::BuildBranches(Alg::node_t *top, unsigned level) {
 
-    if (cur_node->cube_.getNumberOfElems() < max_num_of_elems_in_cube || level >= maxDepth)
+    assert (top);
+
+    unsigned depth = level;
+    if (top->cube_.getNumberOfElems() < max_num_of_elems_in_cube || depth >= maxDepth)
         return;
 
-    Alg::Cube* child_cubes = cur_node->cube_.CubeFraction(spec_trs);
+    node_t *root = top;
 
-    for (int i = 0; i < 8; ++i) {
-        cur_node->_child[i] = new node_t {child_cubes[i]};
-        RecursiveBuild(cur_node->_child[i], level + 1);
+    std::stack<node_t*> stack_of_nodes;
+    stack_of_nodes.push(root);
+
+    std::stack<int> stack_of_i;
+    stack_of_i.push(0);
+
+    Alg::Cube* child_cubes = root->cube_.CubeFraction(spec_trs);
+    for (int i = 0; i < 8; ++i)
+        root->childs[i] = new node_t {child_cubes[i], root};
+
+    while (!stack_of_nodes.empty()) {
+
+        while (stack_of_i.top() < 8) {
+
+            root = stack_of_nodes.top()->childs[stack_of_i.top()];
+
+            if (root->cube_.getNumberOfElems() >= max_num_of_elems_in_cube &&
+                depth < maxDepth)
+            {
+                child_cubes = root->cube_.CubeFraction(spec_trs);
+
+                for (int i = 0; i < 8; ++i)
+                    root->childs[i] = new node_t {child_cubes[i], root};
+
+                stack_of_i.push(0);
+                stack_of_nodes.push(root);
+                depth++;
+                continue;
+            }
+
+            else {
+
+                if (stack_of_i.top() == 7) {
+
+                    stack_of_nodes.pop();
+                    stack_of_i.pop();
+
+                    if (stack_of_nodes.empty())
+                        break;
+
+                    int tmp = stack_of_i.top();
+                    stack_of_i.pop();
+                    stack_of_i.push(tmp + 1);
+
+                    continue;
+                }
+
+                int tmp = stack_of_i.top();
+                stack_of_i.pop();
+                stack_of_i.push(tmp + 1);
+            }
+        }
+
+        if (stack_of_nodes.empty())
+            break;
+
+        stack_of_nodes.pop();
+        stack_of_i.pop();
+
+        if (stack_of_nodes.empty())
+            break;
+
+        int tmp = stack_of_i.top();
+        stack_of_i.pop();
+        stack_of_i.push(tmp + 1);
     }
+
+
 }
 
-Alg::Octree::~Octree() {
-    RecursiveDelete(_top);
-}
+void Alg::Octree::CheckLeafs(res_table &ans_table) {
 
-void Alg::Octree::RecursiveDelete(Alg::node_t *top) {
-    if (top->_child[0] == nullptr)
+    assert(top_);
+    if (top_->childs[0] == nullptr) {
+        top_->cube_.CheckEveryTriangleInCube(ans_table);
         return;
-
-    for (auto & i : top->_child) {
-        RecursiveDelete(i);
-        delete i;
     }
+
+    node_t *root = top_;
+
+    std::stack<node_t*> stack_of_nodes;
+    stack_of_nodes.push(root);
+
+    std::stack<int> stack_of_i;
+    stack_of_i.push(0);
+
+    while (!stack_of_nodes.empty() || root != nullptr) {
+
+        while (stack_of_i.top() < 8) {
+
+            root = stack_of_nodes.top()->childs[stack_of_i.top()];
+
+            if (root != nullptr) {
+                stack_of_nodes.push(root);
+                stack_of_i.push(0);
+                continue;
+            }
+
+            else {
+
+                if (stack_of_i.top() == 7) {
+
+                    root = stack_of_nodes.top();
+                    stack_of_nodes.pop();
+
+                    stack_of_i.pop();
+
+                    //we are in a leaf
+                    root->cube_.CheckEveryTriangleInCube(ans_table);
+
+                    int tmp = stack_of_i.top();
+                    stack_of_i.pop();
+                    stack_of_i.push(tmp + 1);
+
+                    continue;
+                }
+
+                int tmp = stack_of_i.top();
+                stack_of_i.pop();
+                stack_of_i.push(tmp + 1);
+            }
+        }
+
+        //we are in the branch. Don't check triangles!
+        stack_of_nodes.pop();
+        stack_of_i.pop();
+
+        if (stack_of_nodes.empty())
+            break;
+
+        int tmp = stack_of_i.top();
+        stack_of_i.pop();
+        stack_of_i.push(tmp + 1);
+    }
+
 }
+
+void Alg::Octree::CheckSpecialTriangles(Alg::res_table& ans_table) {
+    for (auto& i: spec_trs)
+        i.second->CheckThisTriangle(i.first, ans_table);
+}
+
 
 //////////////////
 /////Functions////
@@ -209,7 +293,7 @@ Alg::FindIntersections (Alg::triangle_vec& triangles) {
     Alg::res_table answer_table;
     Alg::Octree octree{MAXDEPTH, NUMINCUBE, triangles};
 
-    octree.RecursiveDescent(answer_table);
+    octree.CheckLeafs(answer_table);
 
     octree.CheckSpecialTriangles(answer_table);
 
@@ -221,26 +305,6 @@ Alg::FindIntersections (Alg::triangle_vec& triangles) {
     return numbers_of_intersection_trs;
 }
 
-void Alg::Octree::RecursiveDescent (Alg::node_t *top, Alg::res_table& ans_table) {
-    if (top->_child[0] == nullptr) {
-        top->cube_.CheckEveryTriangleInCube(ans_table);
-        return;
-    }
-
-    for (auto & i : top->_child) {
-        if (i != nullptr)
-            RecursiveDescent(i, ans_table);
-    }
-}
-
-void Alg::Octree::RecursiveDescent(res_table &ans_table) {
-    RecursiveDescent(_top, ans_table);
-}
-
-void Alg::Octree::CheckSpecialTriangles(Alg::res_table& ans_table) {
-    for (auto& i: spec_trs)
-        i.second->CheckThisTriangle(i.first, ans_table);
-}
 
 bool Alg::DefineCube(const Alg::triangle_vec& triangles, Geom::Point *dots) {
     if (triangles.empty())
@@ -250,6 +314,7 @@ bool Alg::DefineCube(const Alg::triangle_vec& triangles, Geom::Point *dots) {
     float min_x = ref_tr.A1.x, max_x = ref_tr.A1.x, min_y = ref_tr.A1.y, max_y = ref_tr.A1.y, min_z = ref_tr.A1.z, max_z = ref_tr.A1.z;
     for (auto tr: triangles) {
         Geom::Point points[3] {tr.A1, tr.A2, tr.A3};
+
         for (auto p: points) {
             if (p.x < min_x)
                 min_x = p.x;
@@ -271,13 +336,13 @@ bool Alg::DefineCube(const Alg::triangle_vec& triangles, Geom::Point *dots) {
     float max_length = std::max(x_length, y_length);
     max_length = std::max(max_length, z_length);
 
-    dots[0].x = min_x;
-    dots[0].y = min_y;
-    dots[0].z = min_z;
+    dots[0].x = floor(min_x);
+    dots[0].y = floor(min_y);
+    dots[0].z = floor(min_z);
 
-    dots[1].x = min_x + max_length;
-    dots[1].y = min_y + max_length;
-    dots[1].z = min_z + max_length;
+    dots[1].x = ceil(min_x + max_length);
+    dots[1].y = ceil(min_y + max_length);
+    dots[1].z = ceil(min_z + max_length);
 
     return true;
 }
